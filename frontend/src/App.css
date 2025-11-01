@@ -1,28 +1,38 @@
+/* App.css */
+
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top left, #0f2027, #203a43, #2c5364);
+    color: #e0f7fa;
+    min-height: 100vh;
 }
+
+
+/* --- App Container --- */
 
 .app {
-  text-align: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.navbar {
-  background: #333;
-  padding: 1rem;
-}
 
-.navbar a {
-  color: white;
-  margin: 0 1rem;
-  text-decoration: none;
-}
-
-.navbar a:hover {
-  text-decoration: underline;
-}
+/* --- Main Content Area --- */
 
 .content {
-  padding: 2rem;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px 20px;
+}
+
+
+/* --- Responsive --- */
+
+@media (max-width: 768px) {
+    .content {
+        padding: 30px 15px;
+    }
 }

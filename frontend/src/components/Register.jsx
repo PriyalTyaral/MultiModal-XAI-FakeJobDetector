@@ -15,26 +15,26 @@ function Register() {
     <div className="register">
       <h2>Register</h2>
       <form onSubmit={handleRegister}>
-        <input 
-          type="text" 
-          placeholder="Username" 
+        <input
+          type="text"
+          placeholder="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)} 
-          required 
+          onChange={(e) => setUsername(e.target.value)}
+          required
         />
-        <input 
-          type="email" 
-          placeholder="Email" 
+        <input
+          type="email"
+          placeholder="Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
-        <input 
-          type="password" 
-          placeholder="Password" 
+        <input
+          type="password"
+          placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
+          onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <button type="submit">Register</button>
       </form>
