@@ -1,23 +1,101 @@
+/* Login.css */
+
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(160deg, #0f2027, #203a43, #2c5364);
+    color: #e0f7fa;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .login {
-  max-width: 400px;
-  margin: auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #ccc;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: 60px 50px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.login h2 {
+    margin-bottom: 30px;
+    font-size: 2.2rem;
+    background: linear-gradient(90deg, #36d1dc, #5b86e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.login form {
+    display: flex;
+    flex-direction: column;
 }
 
 .login input {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
-  padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 10px;
+    padding: 15px 18px;
+    margin: 12px 0;
+    color: #fff;
+    font-size: 1.05rem;
+    outline: none;
+    transition: 0.3s ease;
+}
+
+.login input:focus {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px #36d1dc;
 }
 
 .login button {
-  background: #333;
-  color: white;
-  border: none;
-  padding: 10px;
-  cursor: pointer;
+    background: linear-gradient(90deg, #36d1dc, #5b86e5);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 15px 0;
+    margin-top: 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.login button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(91, 134, 229, 0.5);
+}
+
+
+/* Responsive */
+
+@media (max-width: 480px) {
+    .login {
+        padding: 40px 25px;
+        max-width: 90%;
+    }
+    .login h2 {
+        font-size: 1.8rem;
+    }
+}
+
+.switch-text {
+    margin-top: 15px;
+    color: #b2ebf2;
+    font-size: 0.95rem;
+}
+
+.switch-link {
+    color: #00c6ff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.switch-link:hover {
+    color: #0072ff;
 }
