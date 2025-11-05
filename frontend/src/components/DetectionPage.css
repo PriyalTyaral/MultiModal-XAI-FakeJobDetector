@@ -1,0 +1,174 @@
+/* DetectionPage.css */
+
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #001f3f, #004080, #0073e6);
+    color: #e0f7fa;
+    min-height: 100vh;
+}
+
+
+/* Common container */
+
+.detection-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+
+/* Header section */
+
+.detection-container h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #ffffff;
+}
+
+.detection-container p {
+    color: #b2ebf2;
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+
+/* Card container for forms */
+
+.detect-card {
+    background: #0a2a4d;
+    padding: 40px 50px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    max-width: 700px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+/* Text form */
+
+.text-form {
+    margin-bottom: 30px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* ✅ Centers the textarea */
+}
+
+.text-form textarea {
+    width: 80%;
+    /* ✅ Reduced from 140% to fit & center */
+    min-height: 100px;
+    margin: 0 auto;
+    border-radius: 8px;
+    padding: 12px;
+    border: none;
+    resize: none;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    font-family: "Poppins", sans-serif;
+    color: #000;
+}
+
+.text-form textarea::placeholder {
+    color: #777;
+}
+
+.text-form button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+.text-form button:hover {
+    background-color: #0056b3;
+}
+
+
+/* Divider */
+
+.divider {
+    margin: 20px 0;
+    font-size: 1rem;
+    color: #b2ebf2;
+    font-weight: 500;
+}
+
+
+/* File form */
+
+.file-form input[type="file"] {
+    margin-bottom: 12px;
+    color: #b2ebf2;
+}
+
+.file-options {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 15px;
+    color: #b2ebf2;
+}
+
+.file-options input {
+    margin-right: 5px;
+}
+
+.file-form button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+.file-form button:hover {
+    background-color: #0056b3;
+}
+
+
+/* Animation */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detection-container,
+.detect-card {
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+
+/* Responsive */
+
+@media (max-width: 600px) {
+    .detect-card {
+        padding: 30px 20px;
+    }
+    .detection-container h2 {
+        font-size: 1.6rem;
+    }
+    .text-form textarea {
+        min-height: 120px;
+    }
+}

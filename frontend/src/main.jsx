@@ -5,6 +5,7 @@ import App from "./App";
 import HomePage from "./components/HomePage";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import DetectionPage from "./components/DetectionPage";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -15,6 +16,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route index element={<HomePage />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          {/* ✅ Added new route for DetectionPage */}
+          <Route path="detection" element={<DetectionPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

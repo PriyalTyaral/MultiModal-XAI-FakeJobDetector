@@ -1,85 +1,33 @@
-import React, { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 
 function HomePage() {
-  const [jobText, setJobText] = useState("");
-  const [file, setFile] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
-
-  const handleStart = () => {
-    setShowUpload(true);
-  };
-
-  const handleSubmitText = (e) => {
-    e.preventDefault();
-    setAnalyzing(true);
-    setTimeout(() => {
-      alert("Job text analyzed successfully!");
-      setAnalyzing(false);
-    }, 1500);
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleFileSubmit = (e) => {
-    e.preventDefault();
-    if (!file) {
-      alert("Please select a file first!");
-      return;
-    }
-    setAnalyzing(true);
-    setTimeout(() => {
-      alert("File analyzed successfully!");
-      setAnalyzing(false);
-    }, 1500);
-  };
+  const navigate = useNavigate();
 
   return (
-    <div className="home">
-      {!showUpload ? (
-        <div className="start-section">
-          <h1>Fake Job Detection</h1>
-          <p>Detect whether a job posting is real or fake using AI-powered analysis.</p>
-          <button className="start-btn" onClick={handleStart}>
-            Start Detection
-          </button>
-        </div>
-      ) : (
-        <div className="upload-section">
-          <h2>Upload Job Posting</h2>
+    <div className="home-container">
+      {/* Navbar */}
+      <nav className="home-navbar">
+        <ul className="home-nav-links">
+          <li onClick={() => navigate("/")}>Home</li>
+          <li onClick={() => navigate("/login")}>Login</li>
+          <li onClick={() => navigate("/register")}>Register</li>
+        </ul>
+      </nav>
 
-          <form onSubmit={handleSubmitText} className="text-form">
-            <textarea
-              placeholder="Paste your job posting text here..."
-              value={jobText}
-              onChange={(e) => setJobText(e.target.value)}
-            ></textarea>
-            <button type="submit" disabled={analyzing}>
-              {analyzing ? "Analyzing..." : "Submit Text"}
-            </button>
-          </form>
-
-          <div className="divider">or</div>
-
-          <form onSubmit={handleFileSubmit} className="file-form">
-            <input type="file" onChange={handleFileChange} />
-            <div className="file-options">
-              <label>
-                <input type="radio" name="fileType" value="image" /> Image
-              </label>
-              <label>
-                <input type="radio" name="fileType" value="document" /> Document
-              </label>
-            </div>
-            <button type="submit" disabled={analyzing}>
-              {analyzing ? "Analyzing..." : "Submit File"}
-            </button>
-          </form>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="home-content">
+        <h1>Welcome to Fake Job Detection System</h1>
+        <p>
+          Our AI-powered platform helps you verify job postings and detect
+          potential fake listings instantly. Stay safe and informed while
+          applying for your dream job.
+        </p>
+        <button className="home-detect-btn" onClick={() => navigate("/detection")}>
+          Start Detection
+        </button>
+      </div>
     </div>
   );
 }
