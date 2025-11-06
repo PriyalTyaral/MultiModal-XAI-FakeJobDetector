@@ -1,110 +1,56 @@
-/* HomePage.css */
-
-body {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #001f3f, #004080, #0073e6);
-    color: #e0f7fa;
-    min-height: 100vh;
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 70px);
+  text-align: center;
+  padding: 2rem;
+  animation: fadeIn 0.7s ease-in-out;
 }
-
-
-/* Navbar */
-
-.home-navbar {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgba(10, 42, 77, 0.9);
-    padding: 15px 40px;
-    width: 40%;
-    /* Adjust the width for balance */
-    margin: 30px auto;
-    /* Center horizontally */
-    border-radius: 12px;
-    /* Smooth edges */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(6px);
-    /* Slight transparency effect */
-}
-
-.home-nav-links {
-    display: flex;
-    list-style: none;
-    gap: 40px;
-    margin: 0;
-    padding: 0;
-}
-
-.home-nav-links li {
-    cursor: pointer;
-    color: #b2ebf2;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: color 0.3s, transform 0.2s;
-}
-
-.home-nav-links li:hover {
-    color: #ffffff;
-    transform: scale(1.05);
-}
-
-
-/* Hero Section */
 
 .home-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 120px 20px;
+  background: var(--background-card);
+  padding: 3rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.2);
+  max-width: 700px;
 }
 
 .home-content h1 {
-    font-size: 2.8rem;
-    color: #ffffff;
-    margin-bottom: 20px;
+  font-size: 2rem;
+  color: var(--primary);
 }
 
 .home-content p {
-    color: #b2ebf2;
-    font-size: 1.2rem;
-    margin-bottom: 40px;
-    max-width: 600px;
-    line-height: 1.6;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
 }
 
 .home-detect-btn {
-    background-color: #007bff;
-    color: #fff;
-    padding: 14px 32px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: 500;
-    transition: background-color 0.3s, transform 0.2s;
+  margin-top: 2rem;
+  background: var(--primary);
+  color: #111;
+  font-weight: 600;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .home-detect-btn:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--primary);
 }
 
-
-/* Responsive */
-
 @media (max-width: 768px) {
-    .home-nav-links {
-        gap: 25px;
-        flex-wrap: wrap;
-    }
-    .home-content h1 {
-        font-size: 2rem;
-    }
-    .home-detect-btn {
-        padding: 12px 24px;
-        font-size: 1rem;
-    }
+  .home-content {
+    padding: 2rem;
+  }
+
+  .home-content h1 {
+    font-size: 1.6rem;
+  }
 }
