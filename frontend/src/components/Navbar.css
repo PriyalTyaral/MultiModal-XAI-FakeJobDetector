@@ -1,0 +1,148 @@
+
+:root {
+  --navbar-height: 64px; /* adjust if needed */
+  --primary: #00ff88;
+  --nav-bg: rgba(15, 32, 39, 0.95);
+  --text-light: #e0f7fa;
+  --border-light: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Fixed top navbar ---- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: var(--nav-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.25s ease, height 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+/* Logo (left) */
+.navbar-logo {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* theme toggle (small) - placed left of hamburger on mobile */
+.theme-toggle {
+  margin-left: 1rem;
+  margin-right: 1rem;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+/* Links container (desktop) */
+.navbar-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Link styling */
+.navbar-links li a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.navbar-links li a:hover,
+.navbar-links li a.active {
+  background: rgba(0,0,0,0.2);
+  color: var(--primary);
+}
+
+/* Logout button */
+.navbar-logout {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Hamburger (hidden on desktop) */
+.hamburger {
+  display: none;
+  width: 26px;
+  height: 18px;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.hamburger span {
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--text-light);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translateY(6px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translateY(-6px); }
+
+/* ---- Mobile behaviour ---- */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 0.9rem;
+  }
+
+  /* show hamburger */
+  .hamburger { display: flex; }
+
+  /* hide default inline links (they will appear in dropdown) */
+  .navbar-links {
+    display: none;
+  }
+
+  /* dropdown panel that appears below navbar (overlay, not push content) */
+  .navbar-links.active {
+    display: flex;
+    position: absolute;
+    top: var(--navbar-height);
+    left: 0;
+    right: 0;
+    background: var(--nav-bg);
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-light);
+    z-index: 1999; /* just under navbar */
+    box-shadow: 0 6px 30px rgba(0,0,0,0.35);
+  }
+
+  .navbar-links.active li {
+    width: 100%;
+    text-align: center;
+  }
+
+  .navbar-logout {
+    width: 88%;
+    margin: 0.2rem auto;
+  }
+
+  .theme-toggle {
+    margin-right: 0.5rem;
+  }
+}
+/* Optional: Shrink navbar on scroll */
+.navbar.shrink {
+  height: 50px;
+  background: rgba(15, 32, 39, 0.9);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+}

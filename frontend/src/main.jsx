@@ -16,7 +16,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route index element={<HomePage />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          {/* ✅ Added new route for DetectionPage */}
           <Route path="detection" element={<DetectionPage />} />
         </Route>
       </Routes>
