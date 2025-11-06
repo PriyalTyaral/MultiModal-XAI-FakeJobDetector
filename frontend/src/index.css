@@ -23,6 +23,11 @@ body {
 }
  
 
+.app, .content, main, .page-section {
+  /* If you already have .content.flex etc, preserve them — just ensure padding-top exists */
+  padding-top: var(--navbar-height);
+}
+
 /* For pages that use full-height sections (like home), subtract navbar height */
 .home-container,
 .detection-wrapper,

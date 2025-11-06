@@ -1,5 +1,5 @@
 .login, .register {
-  max-width: 10px;
+  max-width: 400px;
   margin: 4rem auto;
   background: var(--background-card);
   padding: 2.5rem;
