@@ -1,4 +1,4 @@
-package com.fakejobdetection.config;
+package com.fakejobdetection.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
