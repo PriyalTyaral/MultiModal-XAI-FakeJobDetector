@@ -5,9 +5,13 @@ import java.util.Map;
 
 public class AnalyzeResponse {
 
+    @SuppressWarnings("FieldMayBeFinal")
     private String result;
+    @SuppressWarnings("FieldMayBeFinal")
     private double confidence;
+    @SuppressWarnings("FieldMayBeFinal")
     private List<String> explanation;
+    @SuppressWarnings("FieldMayBeFinal")
     private Map<String, Double> weights;
 
     public AnalyzeResponse(String result, double confidence,

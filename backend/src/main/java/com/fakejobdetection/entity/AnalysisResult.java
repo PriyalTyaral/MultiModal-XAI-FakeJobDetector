@@ -10,6 +10,7 @@ public class AnalysisResult {
     private Features features;
     private Prediction prediction;
     private Explanation explanation;
+    @SuppressWarnings("FieldMayBeFinal")
     private Instant createdAt = Instant.now();
 
     // ===== GETTERS & SETTERS =====

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
+@SuppressWarnings("UseSpecificCatch")
 public class OpenNLPProcessor {
 
     private static Tokenizer tokenizer;
