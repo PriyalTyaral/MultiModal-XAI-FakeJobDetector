@@ -1,30 +1,40 @@
 package com.fakejobdetection.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.fakejobdetection.dto.AnalyzeRequest;
+import com.fakejobdetection.dto.AnalyzeResponse;
+import com.fakejobdetection.entity.AnalysisResult;
+import com.fakejobdetection.service.TextAnalysisService;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class AnalyzeController {
 
-    @GetMapping("/health")
-    public String health() {
-        return "Backend is running 🚀";
+    private final TextAnalysisService service;
+
+    public AnalyzeController(TextAnalysisService service) {
+        this.service = service;
     }
 
     @PostMapping("/analyze")
-    public Map<String, String> analyze(@RequestBody Map<String, String> data) {
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("message", "Analyze API working");
-        return response;
+    public AnalyzeResponse analyze(@RequestBody AnalyzeRequest request) {
+
+        AnalysisResult result =
+                // service.analyzeAndSave(request.getText());
+                service.analyze(request.getText());
+
+
+        return new AnalyzeResponse(
+                result.getPrediction().label,
+                result.getPrediction().confidence,
+                result.getExplanation().reasons,
+                result.getExplanation().weights
+        );
+    }
+
+    @GetMapping("/health")
+    public String health() {
+        return "Backend is running 🚀";
     }
 }
