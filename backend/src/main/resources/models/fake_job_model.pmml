@@ -1,0 +1,2085 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PMML xmlns="http://www.dmg.org/PMML-4_4" xmlns:data="http://jpmml.org/jpmml-model/InlineTable" version="4.4">
+	<Header>
+		<Application name="SkLearn2PMML package" version="0.124.0"/>
+		<Timestamp>2025-12-17T15:36:09Z</Timestamp>
+	</Header>
+	<MiningBuildTask>
+		<Extension name="repr">PMMLPipeline(steps=[('scaler', StandardScaler()),
+       ('model', RandomForestClassifier(random_state=42))])</Extension>
+	</MiningBuildTask>
+	<DataDictionary>
+		<DataField name="label" optype="categorical" dataType="integer">
+			<Value value="0"/>
+			<Value value="1"/>
+		</DataField>
+		<DataField name="keyword_score" optype="continuous" dataType="double"/>
+		<DataField name="sentence_count" optype="continuous" dataType="double"/>
+		<DataField name="text_length" optype="continuous" dataType="double"/>
+		<DataField name="urgent_flag" optype="continuous" dataType="double"/>
+		<DataField name="no_interview_flag" optype="continuous" dataType="double"/>
+	</DataDictionary>
+	<MiningModel functionName="classification" algorithmName="sklearn.ensemble._forest.RandomForestClassifier">
+		<MiningSchema>
+			<MiningField name="label" usageType="target"/>
+			<MiningField name="text_length"/>
+			<MiningField name="sentence_count"/>
+			<MiningField name="urgent_flag"/>
+			<MiningField name="keyword_score"/>
+			<MiningField name="no_interview_flag"/>
+		</MiningSchema>
+		<Output>
+			<OutputField name="probability(0)" optype="continuous" dataType="double" feature="probability" value="0"/>
+			<OutputField name="probability(1)" optype="continuous" dataType="double" feature="probability" value="1"/>
+		</Output>
+		<LocalTransformations>
+			<DerivedField name="standardScaler(keyword_score)" optype="continuous" dataType="double">
+				<Apply function="/">
+					<Apply function="-">
+						<FieldRef field="keyword_score"/>
+						<Constant dataType="double">0.5</Constant>
+					</Apply>
+					<Constant dataType="double">0.3535533905932738</Constant>
+				</Apply>
+			</DerivedField>
+			<DerivedField name="standardScaler(sentence_count)" optype="continuous" dataType="double">
+				<Apply function="/">
+					<Apply function="-">
+						<FieldRef field="sentence_count"/>
+						<Constant dataType="double">4.75</Constant>
+					</Apply>
+					<Constant dataType="double">2.384848003542364</Constant>
+				</Apply>
+			</DerivedField>
+			<DerivedField name="standardScaler(text_length)" optype="continuous" dataType="double">
+				<Apply function="/">
+					<Apply function="-">
+						<FieldRef field="text_length"/>
+						<Constant dataType="double">517.5</Constant>
+					</Apply>
+					<Constant dataType="double">389.12562238947976</Constant>
+				</Apply>
+			</DerivedField>
+			<DerivedField name="standardScaler(urgent_flag)" optype="continuous" dataType="double">
+				<Apply function="/">
+					<Apply function="-">
+						<FieldRef field="urgent_flag"/>
+						<Constant dataType="double">0.5</Constant>
+					</Apply>
+					<Constant dataType="double">0.5</Constant>
+				</Apply>
+			</DerivedField>
+			<DerivedField name="standardScaler(no_interview_flag)" optype="continuous" dataType="double">
+				<Apply function="/">
+					<Apply function="-">
+						<FieldRef field="no_interview_flag"/>
+						<Constant dataType="double">0.5</Constant>
+					</Apply>
+					<Constant dataType="double">0.5</Constant>
+				</Apply>
+			</DerivedField>
+			<DerivedField name="float(standardScaler(keyword_score))" optype="continuous" dataType="float">
+				<FieldRef field="standardScaler(keyword_score)"/>
+			</DerivedField>
+			<DerivedField name="float(standardScaler(sentence_count))" optype="continuous" dataType="float">
+				<FieldRef field="standardScaler(sentence_count)"/>
+			</DerivedField>
+			<DerivedField name="float(standardScaler(text_length))" optype="continuous" dataType="float">
+				<FieldRef field="standardScaler(text_length)"/>
+			</DerivedField>
+			<DerivedField name="float(standardScaler(urgent_flag))" optype="continuous" dataType="float">
+				<FieldRef field="standardScaler(urgent_flag)"/>
+			</DerivedField>
+			<DerivedField name="float(standardScaler(no_interview_flag))" optype="continuous" dataType="float">
+				<FieldRef field="standardScaler(no_interview_flag)"/>
+			</DerivedField>
+			<DerivedField name="double(float(standardScaler(text_length)))" optype="continuous" dataType="double">
+				<FieldRef field="float(standardScaler(text_length))"/>
+			</DerivedField>
+			<DerivedField name="double(float(standardScaler(sentence_count)))" optype="continuous" dataType="double">
+				<FieldRef field="float(standardScaler(sentence_count))"/>
+			</DerivedField>
+			<DerivedField name="double(float(standardScaler(urgent_flag)))" optype="continuous" dataType="double">
+				<FieldRef field="float(standardScaler(urgent_flag))"/>
+			</DerivedField>
+			<DerivedField name="double(float(standardScaler(keyword_score)))" optype="continuous" dataType="double">
+				<FieldRef field="float(standardScaler(keyword_score))"/>
+			</DerivedField>
+			<DerivedField name="double(float(standardScaler(no_interview_flag)))" optype="continuous" dataType="double">
+				<FieldRef field="float(standardScaler(no_interview_flag))"/>
+			</DerivedField>
+		</LocalTransformations>
+		<Segmentation multipleModelMethod="average" missingPredictionTreatment="returnMissing">
+			<Segment id="1">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="2">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="3">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="4">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="5">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="6">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="-0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="7">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.14776715636253357"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="8">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="9">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="10">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="11">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.10482847690582275"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="12">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="0.14776718616485596"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="13">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="14">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="15">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.10482847690582275"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="16">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="17">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="18">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="19">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="20">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="21">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="22">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="23">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="24">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.14776715636253357"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="25">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="26">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="27">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="28">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="29">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="30">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="31">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="32">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.10482847690582275"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="33">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="34">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.14776715636253357"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="35">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="36">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="37">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="38">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="39">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="40">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="41">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="42">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="43">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="44">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="45">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="46">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="47">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="48">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="49">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="50">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="51">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="52">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="53">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="54">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="55">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="0.14776718616485596"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="56">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="57">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="58">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.14776715636253357"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="59">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="0.14776718616485596"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="60">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="-0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="61">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="62">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="63">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="64">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="65">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="66">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="67">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="68">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="69">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="70">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="71">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="72">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="0.14776718616485596"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="73">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="74">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="75">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="76">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="77">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="1" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="0"/>
+						<ScoreDistribution value="1" recordCount="1"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="78">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="79">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="80">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.10482847690582275"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="81">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="82">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="0.31448546051979065"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="83">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="-0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="84">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="-0.141421377658844"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="85">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="86">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="87">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="88">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="89">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="90">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="91">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="92">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="93">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(text_length)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(text_length)))" operator="lessOrEqual" value="-0.10921922326087952"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="94">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="95">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(sentence_count)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="1" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(sentence_count)))" operator="lessOrEqual" value="-0.10482847690582275"/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+						<Node score="0" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="96">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema/>
+					<Node score="0" recordCount="1">
+						<True/>
+						<ScoreDistribution value="0" recordCount="1"/>
+						<ScoreDistribution value="1" recordCount="0"/>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="97">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(urgent_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(urgent_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="98">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="99">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(keyword_score)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(keyword_score)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+			<Segment id="100">
+				<True/>
+				<TreeModel functionName="classification" missingValueStrategy="nullPrediction">
+					<MiningSchema>
+						<MiningField name="double(float(standardScaler(no_interview_flag)))"/>
+					</MiningSchema>
+					<Node>
+						<True/>
+						<Node score="0" recordCount="1">
+							<SimplePredicate field="double(float(standardScaler(no_interview_flag)))" operator="lessOrEqual" value="0.0"/>
+							<ScoreDistribution value="0" recordCount="1"/>
+							<ScoreDistribution value="1" recordCount="0"/>
+						</Node>
+						<Node score="1" recordCount="1">
+							<True/>
+							<ScoreDistribution value="0" recordCount="0"/>
+							<ScoreDistribution value="1" recordCount="1"/>
+						</Node>
+					</Node>
+				</TreeModel>
+			</Segment>
+		</Segmentation>
+	</MiningModel>
+</PMML>
