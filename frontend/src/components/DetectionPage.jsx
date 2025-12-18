@@ -1,94 +1,63 @@
-import React, { useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "./Navbar";
+import { useState } from "react";
 import "./DetectionPage.css";
 
-function DetectionPage() {
-  const [jobText, setJobText] = useState("");
-  const [file, setFile] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [history, setHistory] = useState([]);
+export default function DetectionPage() {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
-  const navigate = useNavigate();
-useEffect(() => {
-  const user = localStorage.getItem("user");
-  if (!user) navigate("/login");
-}, []);
+  const handleAnalyze = async () => {
+    setLoading(true);
 
-  const handleSubmitText = (e) => {
-    e.preventDefault();
-    if (!jobText.trim()) return alert("Enter job text first!");
-    setAnalyzing(true);
+    // TEMP (will replace with backend API)
     setTimeout(() => {
-      const newEntry = { type: "text", content: jobText, result: "Analyzed ✅" };
-      setHistory([newEntry, ...history]);
-      setJobText("");
-      setAnalyzing(false);
-    }, 1000);
-  };
-
-  const handleFileChange = (e) => setFile(e.target.files[0]);
-
-  const handleFileSubmit = (e) => {
-    e.preventDefault();
-    if (!file) return alert("Please select a file first!");
-    setAnalyzing(true);
-    setTimeout(() => {
-      const newEntry = { type: "file", content: file.name, result: "Analyzed ✅" };
-      setHistory([newEntry, ...history]);
-      setFile(null);
-      setAnalyzing(false);
-    }, 1000);
+      setResult({
+        label: "FAKE",
+        confidence: 0.93,
+        reasons: [
+          "Urgent language detected",
+          "No interview mentioned",
+          "Suspicious keywords detected"
+        ]
+      });
+      setLoading(false);
+    }, 1200);
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="detection-wrapper">
-        {/* History Sidebar */}
-        <aside className="history-panel">
-          <h3>History</h3>
-          {history.length === 0 ? (
-            <p className="empty-history">No history yet</p>
-          ) : (
-            history.map((item, index) => (
-              <div key={index} className="history-item">
-                <strong>{item.type === "file" ? "📄 File" : "📝 Text"}</strong>
-                <p>{item.content}</p>
-                <span>{item.result}</span>
-              </div>
-            ))
-          )}
-        </aside>
+    <div className="detection-wrapper">
+      <aside className="history-panel">
+        <h3>History</h3>
+        <div className="history-item">Fake Job Example</div>
+        <div className="history-item">Internship Scam</div>
+      </aside>
 
-        {/* Main Detection Section */}
-        <div className="detection-container">
-          <h2>Fake Job Detection</h2>
-          <p>Upload a job posting or paste text to analyze authenticity.</p>
+      <main className="detection-container">
+        <h2>Analyze Job Description</h2>
 
-          <form onSubmit={handleSubmitText} className="text-form">
-            <textarea
-              placeholder="Paste your job posting text here..."
-              value={jobText}
-              onChange={(e) => setJobText(e.target.value)}
-            ></textarea>
-            <button type="submit" disabled={analyzing}>
-              {analyzing ? "Analyzing..." : "Submit Text"}
-            </button>
-          </form>
+        <textarea
+          rows="6"
+          placeholder="Paste job description here..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
 
-          <div className="divider">or</div>
+        <button onClick={handleAnalyze} disabled={loading}>
+          {loading ? "Analyzing..." : "Analyze"}
+        </button>
 
-          <form onSubmit={handleFileSubmit} className="file-form">
-            <input type="file" onChange={handleFileChange} />
-            <button type="submit" disabled={analyzing}>
-              {analyzing ? "Analyzing..." : "Submit File"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </>
+        {result && (
+          <div className={`result-card ${result.label.toLowerCase()}`}>
+            <h3>{result.label}</h3>
+            <p>Confidence: {(result.confidence * 100).toFixed(1)}%</p>
+            <ul>
+              {result.reasons.map((r, i) => (
+                <li key={i}>⚠️ {r}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
-
-export default DetectionPage;
