@@ -1,32 +1,9 @@
-import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
-function Navbar() {
+export default function Navbar() {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-
-  // Load saved theme from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-      setDarkMode(false);
-    } else {
-      document.documentElement.setAttribute("data-theme", "dark");
-      setDarkMode(true);
-    }
-  }, []);
-
-  // Toggle theme
-  const toggleTheme = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    const theme = newMode ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  };
+  const isLoggedIn = !!localStorage.getItem("user");
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -35,37 +12,27 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      {/* Logo */}
-      <div className="navbar-logo" onClick={() => navigate("/")}>
-        FakeJobDetection
-      </div>
+      <div className="navbar-logo">FakeJobDetector</div>
 
-      {/* Theme Toggle Button */}
-      <div className="theme-toggle" onClick={toggleTheme}>
-        {darkMode ? "🌙" : "☀️"}
-      </div>
+      <ul className="navbar-links">
+        <li><NavLink to="/">Home</NavLink></li>
+        <li><NavLink to="/detection">Detect</NavLink></li>
 
-      {/* Hamburger Icon */}
-      <div
-        className={`hamburger ${menuOpen ? "open" : ""}`}
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+        {!isLoggedIn && (
+          <>
+            <li><NavLink to="/login">Login</NavLink></li>
+            <li><NavLink to="/register">Register</NavLink></li>
+          </>
+        )}
 
-      {/* Nav Links */}
-      <ul className={`navbar-links ${menuOpen ? "active" : ""}`}>
-        <li><NavLink to="/" end onClick={() => setMenuOpen(false)}>Home</NavLink></li>
-        <li><NavLink to="/detection" onClick={() => setMenuOpen(false)}>Detection</NavLink></li>
-        <li><NavLink to="/history" onClick={() => setMenuOpen(false)}>History</NavLink></li>
-        <li><NavLink to="/login" onClick={() => setMenuOpen(false)}>Login</NavLink></li>
-        <li><NavLink to="/register" onClick={() => setMenuOpen(false)}>Register</NavLink></li>
-        <li><button className="navbar-logout" onClick={handleLogout}>Logout</button></li>
+        {isLoggedIn && (
+          <li>
+            <button className="navbar-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </li>
+        )}
       </ul>
     </nav>
   );
 }
-
-export default Navbar;
