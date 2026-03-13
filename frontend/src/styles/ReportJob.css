@@ -1,0 +1,94 @@
+/* ===== Report Job ===== */
+.report-page {
+  padding: var(--space-12) 0;
+  min-height: calc(100vh - var(--navbar-height));
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+  animation: fadeInUp 0.5s ease;
+}
+.report-header h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.02em;
+}
+.report-header p {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.report-card {
+  max-width: 640px;
+  margin: 0 auto;
+  animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.report-success {
+  text-align: center;
+  padding: var(--space-8);
+  animation: scaleIn 0.5s ease;
+}
+.report-success-icon {
+  font-size: 56px;
+  margin-bottom: var(--space-6);
+}
+.report-success h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-3);
+}
+.report-success p {
+  color: var(--text-muted);
+  margin-bottom: var(--space-6);
+}
+
+/* Category selector */
+.report-categories {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+.report-category {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.report-category:hover {
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+.report-category.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary-hover);
+}
+
+@media (max-width: 768px) {
+  .report-header h1 {
+    font-size: var(--font-size-3xl);
+  }
+  .report-categories {
+    grid-template-columns: 1fr;
+  }
+}
