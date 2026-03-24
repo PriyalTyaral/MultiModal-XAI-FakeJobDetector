@@ -87,8 +87,8 @@ Since no scikit-learn `.pkl` file is available, the service trains a **TF-IDF + 
 
 # Backend
 
-# commands
+# Commands
 
 * cd backend
 * mvn clean install
-* mvn spring-boot:run  
+* mvn spring-boot:run
