@@ -3,6 +3,7 @@ An XAI-powered hybrid framework for detecting fake job postings using multimodal
 
 
 Commands to run frontend:
-cd frontend
-npm install
-npm run dev
+
+* cd frontend
+* npm install
+* npm run dev
