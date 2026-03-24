@@ -77,3 +77,18 @@ Clear the in-memory LRU cache.
 ## Surrogate Model
 
 Since no scikit-learn `.pkl` file is available, the service trains a **TF-IDF + Logistic Regression** surrogate model at startup on a curated dataset of real and fake job posting examples. The surrogate learns patterns typical of fake jobs (wage promises, upfront fees, vague requirements) vs. real ones. LIME then explains **this surrogate's decisions** on a per-prediction basis.
+
+# audio-service
+
+# commands
+
+* cd audio-service
+* python audio-service.py
+
+# Backend
+
+# commands
+
+* cd backend
+* mvn clean install
+* mvn spring-boot:run  
