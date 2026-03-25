@@ -90,6 +90,7 @@ Since no scikit-learn `.pkl` file is available, the service trains a **TF-IDF + 
 
 # Commands
 
+* Add model.pmml in path /backend/src/main/resources
 * cd backend
 * mvn clean install
 * mvn spring-boot:run
