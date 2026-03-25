@@ -23,6 +23,7 @@ backend/src/main/resources/model.pmml
 
 # Python virtual environment (lime-service)
 lime-service/venv/
+lime-service/__pycache__/
 
 # SPRING BOOT 
 HELP.md
