@@ -21,6 +21,9 @@ coverage/
 # ML Model (too large for GitHub)
 backend/src/main/resources/model.pmml
 
+# Python virtual environment (lime-service)
+lime-service/venv/
+
 # SPRING BOOT 
 HELP.md
 target/
