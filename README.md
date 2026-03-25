@@ -25,10 +25,6 @@ venv\Scripts\activate        # Windows
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-copy .env.example .env
-# Edit .env with your settings
-
 # Start the service
 python app.py
 ```
