@@ -19,7 +19,6 @@ from flask_cors import CORS
 from explainer import LimeExplainerService
 from cache import ExplanationCache
 from monitoring import PerformanceMonitor
-import gcp_client
 
 # ──────────────────────────────────────────────────────────
 # Configuration
@@ -147,25 +146,9 @@ def explain():
             cache.set(cache_key, explanation)
             cache_status = "MISS"
 
-            # ── GCP upload (async-style — if it fails, we continue) ──
-            gcs_url = gcp_client.upload_explanation(job_id, explanation, {
-                "num_features": num_features,
-                "text_length": len(text)
-            })
-        
-        gcs_url = "" if cache_status == "HIT" else locals().get("gcs_url", "")
-
         # ── Format output ──
         latency_ms = round((time.time() - t_start) * 1000, 2)
         monitor.record_request(latency_ms, success=True)
-
-        # ── GCP audit log ──
-        gcp_client.log_request("explain", {
-            "job_id": job_id,
-            "num_features": num_features,
-            "cache_status": cache_status,
-            "latency_ms": latency_ms
-        })
 
         response_data = {
             "success": True,
@@ -174,7 +157,6 @@ def explain():
             "cache_status": cache_status,
             "latency_ms": latency_ms,
             "output_format": output_format,
-            "gcs_url": gcs_url,
         }
 
         if output_format == "visual":
@@ -205,7 +187,6 @@ def health():
     return jsonify({
         "status": "ok",
         "model": "surrogate (TF-IDF + LogisticRegression)",
-        "gcp_mode": "online" if gcp_client.is_online() else "offline",
         "performance": perf,
         "cache": c_stats,
     }), 200

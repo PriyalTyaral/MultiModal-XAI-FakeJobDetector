@@ -1,14 +1,18 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from './shared/Toast';
 import '../styles/ResultPage.css';
 import LimeChart from './LimeChart';
-import { getExplanation } from '../services/api';
+import { getExplanation, saveEnhancedJobResult } from '../services/api';
 
 const DEPTH_OPTIONS = [5, 10, 15, 20];
 
 const ResultPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToast } = useToast();
 
   // ── Explanation state (depth/format controls + re-fetch) ──────
   const [numFeatures, setNumFeatures] = useState(10);
@@ -40,14 +44,23 @@ const ResultPage = () => {
 
   const {
     label,
-    probability_fake,
-    explanation,      // legacy JSON string
+    prediction,               // ✅ NEW: from EnhancedJobResult
+    probability_fake,         // Legacy format
+    confidenceScore,          // ✅ NEW: from EnhancedJobResult (adjusted)
+    baseModelScore,           // ✅ NEW: original model score
+    adjustmentFactor,         // ✅ NEW: how much was adjusted
+    explanation,              // legacy JSON string
     lime_explanations,
     cache_status,
     explanation_latency_ms,
     gcs_url,
-    domainDetails,
-    jobText,          // may not be present in all flows
+    companyVerification,      // ✅ NEW: company verification data
+    domainValidation,         // ✅ NEW: domain validation data
+    externalValidationInfluence,  // ✅ NEW: explanation note
+    redFlagScore,             // ✅ NEW: red flag detection score
+    redFlagsDetected,         // ✅ NEW: list of detected red flags
+    domainDetails,            // Legacy domain verification
+    jobText,                  // may not be present in all flows
   } = state.result;
 
   // Store text for re-fetch
@@ -77,11 +90,23 @@ const ResultPage = () => {
   const displayLatencyMs    = latencyMs    ?? explanation_latency_ms;
 
   // ── Probability / risk ────────────────────────────────────────
-  let fakeProb = probability_fake;
-  if (fakeProb > 1) fakeProb /= 100;
+  // ✅ NEW: Check if this is enhanced result (has confidenceScore)
+  let fakeProb;
+  let finalPrediction = prediction || label;  // Use prediction if available
+  
+  if (confidenceScore !== undefined) {
+    // ✅ NEW: Enhanced result format
+    fakeProb = confidenceScore;
+    if (fakeProb > 1) fakeProb /= 100;  // normalize if percentage
+  } else {
+    // Legacy format
+    fakeProb = probability_fake;
+    if (fakeProb > 1) fakeProb /= 100;
+  }
+  
   fakeProb = Math.min(Math.max(fakeProb, 0), 1);
   const realProb = 1 - fakeProb;
-  const isFake = label === 'FAKE' || fakeProb >= 0.5;
+  const isFake = finalPrediction === 'FAKE' || fakeProb >= 0.5;
   const fakePercent = (fakeProb * 100).toFixed(1);
   const realPercent = (realProb * 100).toFixed(1);
 
@@ -136,6 +161,7 @@ const ResultPage = () => {
     a.click(); URL.revokeObjectURL(url);
   };
 
+
   return (
     <div className="result-page">
       <div className="container">
@@ -184,6 +210,35 @@ const ResultPage = () => {
         {/* ── Confidence Breakdown ──────────────────────── */}
         <div className="result-breakdown card-elevated">
           <h3>📊 Confidence Breakdown</h3>
+          
+          {/* ✅ NEW: Show adjustment info if available */}
+          {confidenceScore !== undefined && baseModelScore !== undefined && (
+            <div style={{ 
+              backgroundColor: 'var(--bg-secondary)', 
+              padding: 'var(--space-4)', 
+              borderRadius: 'var(--radius-md)',
+              marginBottom: 'var(--space-4)',
+              fontSize: 'var(--font-size-sm)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                <span>🤖 ML Model Score:</span>
+                <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{(baseModelScore * 100).toFixed(1)}%</span>
+              </div>
+              {adjustmentFactor !== 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                  <span>⚙️ Post-Processing Adjustment:</span>
+                  <span style={{ fontWeight: 'var(--font-weight-bold)', color: adjustmentFactor > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {adjustmentFactor > 0 ? '+' : ''}{(adjustmentFactor * 100).toFixed(1)}%
+                  </span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: 'var(--space-2)' }}>
+                <span style={{ fontWeight: 'var(--font-weight-bold)' }}>🎯 Final Score:</span>
+                <span style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-base)' }}>{(confidenceScore * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+          )}
+          
           <div className="breakdown-bars">
             {[
               { label: 'Fake', pct: fakePercent, color: 'var(--gradient-danger)' },
@@ -204,6 +259,196 @@ const ResultPage = () => {
             ))}
           </div>
         </div>
+
+        {/* ✅ NEW: COMPANY VERIFICATION CARD ────────────────────────────────── */}
+        {companyVerification && (
+          <div className="result-company-verification card-elevated" style={{
+            borderLeft: `4px solid ${companyVerification.exists ? 
+              (companyVerification.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-warning)') :
+              'var(--color-danger)'}`
+          }}>
+            <h3>🏢 Company Verification</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginTop: 'var(--space-4)' }}>
+              {/* Exists Status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <div style={{ fontSize: '24px' }}>
+                  {companyVerification.exists ? '✅' : '❌'}
+                </div>
+                <div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Company Found</div>
+                  <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
+                    {companyVerification.exists ? 'Yes' : 'Not Found'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <div style={{ fontSize: '24px' }}>
+                  {companyVerification.status === 'ACTIVE' ? '🟢' : companyVerification.status === 'INACTIVE' ? '🟡' : '⚪'}
+                </div>
+                <div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Status</div>
+                  <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
+                    {companyVerification.status}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {companyVerification.website && (
+              <div style={{ marginTop: 'var(--space-4)', padding: 'var(--space-3)', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Company Website</div>
+                <a href={companyVerification.website} target="_blank" rel="noopener noreferrer" 
+                   style={{ color: 'var(--color-primary)', textDecoration: 'none', wordBreak: 'break-all' }}>
+                  {companyVerification.website}
+                </a>
+              </div>
+            )}
+
+            {companyVerification.message && (
+              <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                ℹ️ {companyVerification.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ✅ NEW: DOMAIN VALIDATION CARD ────────────────────────────────── */}
+        {domainValidation && (
+          <div className="result-domain-validation card-elevated" style={{
+            borderLeft: `4px solid ${domainValidation.match ? 'var(--color-success)' : 'var(--color-danger)'}`
+          }}>
+            <h3>🔗 Domain Validation</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginTop: 'var(--space-4)' }}>
+              {/* Domain Match */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <div style={{ fontSize: '24px' }}>
+                  {domainValidation.match ? '✅' : '⚠️'}
+                </div>
+                <div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Domain Match</div>
+                  <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
+                    {domainValidation.match ? 'Match' : 'Mismatch'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Risk Score */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <div style={{ fontSize: '24px' }}>
+                  {domainValidation.riskScore >= 0.8 ? '🟢' : domainValidation.riskScore >= 0.5 ? '🟡' : '🔴'}
+                </div>
+                <div>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Risk Score</div>
+                  <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
+                    {(domainValidation.riskScore * 100).toFixed(0)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Domain Details */}
+            <div style={{ marginTop: 'var(--space-4)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+              {domainValidation.companyDomain && (
+                <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Company Domain</div>
+                  <code style={{ color: 'var(--color-primary)', fontSize: 'var(--font-size-sm)' }}>{domainValidation.companyDomain}</code>
+                </div>
+              )}
+              {domainValidation.extractedDomain && (
+                <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>Posting Domain</div>
+                  <code style={{ color: 'var(--color-primary)', fontSize: 'var(--font-size-sm)' }}>{domainValidation.extractedDomain}</code>
+                </div>
+              )}
+            </div>
+
+            {domainValidation.message && (
+              <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                ℹ️ {domainValidation.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ✅ NEW: External Validation Influence Note ────────────────────────────────── */}
+        {externalValidationInfluence && (
+          <div className="result-external-note card-elevated" style={{
+            backgroundColor: 'var(--bg-info-light)',
+            borderLeft: '4px solid var(--color-info)'
+          }}>
+            <h3>📋 Analysis Notes</h3>
+            <p style={{ color: 'var(--text-primary)', marginTop: 'var(--space-2)' }}>
+              {externalValidationInfluence}
+            </p>
+          </div>
+        )}
+
+        {/* ✅ NEW: RED FLAGS CARD ────────────────────────────────── */}
+        {redFlagsDetected && redFlagsDetected.length > 0 && (
+          <div className="result-red-flags card-elevated" style={{
+            borderLeft: `4px solid var(--color-danger)`,
+            backgroundColor: 'rgba(239, 68, 68, 0.05)'
+          }}>
+            <h3>🚩 Red Flags Detected</h3>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', margin: 'var(--space-4) 0', padding: 'var(--space-3)', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '32px' }}>🚩</div>
+              <div>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Red Flag Score</div>
+                <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)', fontSize: 'var(--font-size-lg)' }}>
+                  {(redFlagScore * 100).toFixed(1)}%
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {redFlagsDetected.map((flag, idx) => (
+                <div key={idx} style={{
+                  padding: 'var(--space-3)',
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderRadius: 'var(--radius-md)',
+                  borderLeft: '3px solid var(--color-danger)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
+                    <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
+                      {flag.type}
+                    </div>
+                    <span style={{ 
+                      padding: '0.25rem 0.75rem',
+                      backgroundColor: 'var(--color-danger)',
+                      color: 'white',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: 'var(--font-size-sm)',
+                      fontWeight: 'var(--font-weight-bold)'
+                    }}>
+                      {(flag.weight * 100).toFixed(0)}% weight
+                    </span>
+                  </div>
+                  <div style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-1)' }}>
+                    {flag.description}
+                  </div>
+                  {flag.evidence && (
+                    <div style={{ 
+                      color: 'var(--text-muted)',
+                      fontSize: 'var(--font-size-sm)',
+                      fontStyle: 'italic',
+                      padding: 'var(--space-2)',
+                      backgroundColor: 'var(--bg-primary)',
+                      borderRadius: 'var(--radius-sm)',
+                      marginTop: 'var(--space-2)'
+                    }}>
+                      Evidence: {flag.evidence}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ══ LIME EXPLANATION PANEL ════════════════════════════ */}
         <div className="result-explanation card-elevated lime-panel">

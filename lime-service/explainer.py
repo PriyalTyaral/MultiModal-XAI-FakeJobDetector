@@ -84,10 +84,12 @@ class LimeExplainerService:
             logger.info("Loading scikit-learn model from: %s", model_path)
             with open(model_path, "rb") as f:
                 self.pipeline = pickle.load(f)
+                self._fix_model_compatibility()
         elif os.path.exists(surrogate_cache):
             logger.info("Loading cached surrogate from: %s", surrogate_cache)
             with open(surrogate_cache, "rb") as f:
                 self.pipeline = pickle.load(f)
+                self._fix_model_compatibility()
         else:
             logger.info("Training new surrogate model for LIME...")
             self._train_surrogate()
@@ -95,6 +97,18 @@ class LimeExplainerService:
             with open(surrogate_cache, "wb") as f:
                 pickle.dump(self.pipeline, f)
             logger.info("Surrogate model saved to: %s", surrogate_cache)
+
+    def _fix_model_compatibility(self):
+        """Fix sklearn model compatibility issues from older pickle versions."""
+        try:
+            # Get the classifier from the pipeline
+            clf = self.pipeline.named_steps.get("clf")
+            if clf and hasattr(clf, "multi_class") is False:
+                # Add missing multi_class attribute that newer scikit-learn expects
+                clf.multi_class = "auto"
+                logger.info("Added missing 'multi_class' attribute to LogisticRegression for compatibility")
+        except Exception as e:
+            logger.warning("Could not fix model compatibility: %s", str(e))
 
     def _train_surrogate(self):
         """Train a TF-IDF + Logistic Regression pipeline on the seed corpus."""
@@ -110,7 +124,8 @@ class LimeExplainerService:
                 C=1.0,
                 max_iter=1000,
                 class_weight="balanced",
-                random_state=42
+                random_state=42,
+                multi_class="auto"
             ))
         ])
         self.pipeline.fit(texts, labels)

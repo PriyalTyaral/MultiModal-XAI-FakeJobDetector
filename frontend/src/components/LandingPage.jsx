@@ -19,10 +19,10 @@ const LandingPage = () => {
       description: 'Upload audio recordings of job calls to detect scripted pitches, urgency tactics, and voice manipulation.',
     },
     {
-      icon: '🎬',
-      type: 'video',
-      title: 'Video Analysis',
-      description: 'Submit video files for deep analysis of visual cues, presentation patterns, and content authenticity.',
+      icon: '🖼️',
+      type: 'image',
+      title: 'Image Analysis',
+      description: 'Submit images or screenshots for deep analysis of visual content, presentation patterns, and authenticity verification.',
     },
     {
       icon: '📄',

@@ -80,7 +80,7 @@ Since no scikit-learn `.pkl` file is available, the service trains a **TF-IDF + 
 
 * cd audio-service
 * pip install -r requirements.txt
-* python audio-service.py
+* python audio_service.py
 
 # Backend
 

@@ -10,7 +10,6 @@ const SignIn = () => {
   const { addToast } = useToast();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
@@ -108,35 +107,10 @@ const SignIn = () => {
               </div>
             </div>
 
-            <div className="auth-options">
-              <label className="auth-remember">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-                Remember me
-              </label>
-              <button type="button" className="auth-forgot">Forgot password?</button>
-            </div>
-
             <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
               Sign In
             </button>
           </form>
-
-          <div className="auth-divider">
-            <span>or continue with</span>
-          </div>
-
-          <div className="auth-social-buttons">
-            <button type="button" className="auth-social-btn">
-              <span>G</span> Google
-            </button>
-            <button type="button" className="auth-social-btn">
-              <span>GH</span> GitHub
-            </button>
-          </div>
 
           <div className="auth-footer">
             Don't have an account? <Link to="/signup">Sign Up</Link>

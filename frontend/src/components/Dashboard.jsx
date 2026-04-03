@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { getUserDashboard } from '../services/api';
+import { getUserDashboard2 } from '../services/api';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -24,17 +24,17 @@ const Dashboard = () => {
       if (!user) return;
       try {
         const actualUserId = user.userId || user.id || user._id;
-        const data = await getUserDashboard(actualUserId);
-        setStats(data.stats);
-        setHistory(data.history);
+        const data = await getUserDashboard2(actualUserId);
+        setStats(data.statistics);
+        setHistory(data.recentResults);
         
         // Very basic aggregation for chart (group by month string derived from ISO localdatetime)
-        const grouped = data.history.reduce((acc, curr) => {
+        const grouped = data.recentResults.reduce((acc, curr) => {
           const date = new Date(curr.createdAt);
           const month = date.toLocaleString('default', { month: 'short' });
           if (!acc[month]) acc[month] = { fake: 0, real: 0 };
           
-          if (curr.result?.toLowerCase() === 'fake') {
+          if (curr.prediction?.toUpperCase() === 'FAKE') {
             acc[month].fake += 1;
           } else {
             acc[month].real += 1;
@@ -69,11 +69,11 @@ const Dashboard = () => {
   }
 
   const filteredHistory = history.filter(item => {
-    // Basic search on text snippet since we no longer have "title"
-    const snippet = item.text ? item.text.substring(0, 50).toLowerCase() : 'Anonymous Job';
+    // Search on originalInputPreview
+    const snippet = item.originalInputPreview ? item.originalInputPreview.toLowerCase() : 'Job Analysis';
     const matchesSearch = snippet.includes(search.toLowerCase());
     const filterNorm = filter.toUpperCase();
-    const matchesFilter = filter === 'all' || item.result?.toUpperCase() === filterNorm;
+    const matchesFilter = filter === 'all' || item.prediction?.toUpperCase() === filterNorm;
     return matchesSearch && matchesFilter;
   });
 
@@ -93,29 +93,6 @@ const Dashboard = () => {
           <button className="btn btn-primary" onClick={() => navigate('/analyze')}>
             + New Analysis
           </button>
-        </div>
-
-        <div className="dashboard-stats stagger-children">
-          <div className="stat-card">
-            <div className="stat-card-icon purple">📊</div>
-            <div className="stat-card-value">{stats.total}</div>
-            <div className="stat-card-label">Total Analyses</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-icon red">⚠️</div>
-            <div className="stat-card-value" style={{ color: 'var(--color-danger)' }}>{stats.fake}</div>
-            <div className="stat-card-label">Fake Detected</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-icon green">✅</div>
-            <div className="stat-card-value" style={{ color: 'var(--color-success)' }}>{stats.real}</div>
-            <div className="stat-card-label">Legitimate</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-icon blue">🎯</div>
-            <div className="stat-card-value">{stats.avgConfidence}%</div>
-            <div className="stat-card-label">Avg Fake Confidence</div>
-          </div>
         </div>
 
         {/* Chart */}
@@ -175,34 +152,53 @@ const Dashboard = () => {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Job Title</th>
+                  <th>Job Input</th>
                   <th>Date</th>
                   <th>Result</th>
                   <th>Confidence</th>
+                  <th>Red Flags</th>
+                  <th>ML Score</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredHistory.map(item => (
                   <tr key={item.id}>
                     <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {item.text ? item.text.substring(0, 40) + '...' : 'Analyzed Job Data'}
+                      {item.originalInputPreview || 'Job Analysis'}
                     </td>
                     <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <span className={`badge ${item.result?.toUpperCase() === 'FAKE' ? 'badge-danger' : 'badge-success'}`}>
-                        {item.result?.toUpperCase() === 'FAKE' ? '⚠️ Fake' : '✅ Real'}
+                      <span className={`badge ${item.prediction?.toUpperCase() === 'FAKE' ? 'badge-danger' : 'badge-success'}`}>
+                        {item.prediction?.toUpperCase() === 'FAKE' ? '⚠️ Fake' : '✅ Real'}
                       </span>
                     </td>
                     <td>
-                      <span style={{ fontWeight: 600, color: (item.fake_confidence || 0) > 50 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                        {(item.fake_confidence || 0).toFixed(1)}%
+                      <span style={{ fontWeight: 600, color: (item.confidenceScore * 100) > 50 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                        {(item.confidenceScore * 100).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td>
+                      {item.redFlagsDetected && item.redFlagsDetected.length > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '18px' }}>🚩</span>
+                          <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>
+                            {item.redFlagsDetected.length} flag{item.redFlagsDetected.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>No flags</span>
+                      )}
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 600 }}>
+                        {(item.baseModelScore * 100).toFixed(1)}%
                       </span>
                     </td>
                   </tr>
                 ))}
                 {filteredHistory.length === 0 && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-muted)' }}>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-muted)' }}>
                       No analyses found matching your search.
                     </td>
                   </tr>
