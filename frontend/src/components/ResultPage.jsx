@@ -207,34 +207,21 @@ const ResultPage = () => {
           </div>
         </div>
 
-        {/* ── Confidence Breakdown ──────────────────────── */}
+        {/* ── Confidence Breakdown (Simplified) ──────────────────────── */}
         <div className="result-breakdown card-elevated">
-          <h3>📊 Confidence Breakdown</h3>
+          <h3>📊 Confidence</h3>
           
-          {/* ✅ NEW: Show adjustment info if available */}
-          {confidenceScore !== undefined && baseModelScore !== undefined && (
+          {confidenceScore !== undefined && (
             <div style={{ 
               backgroundColor: 'var(--bg-secondary)', 
               padding: 'var(--space-4)', 
               borderRadius: 'var(--radius-md)',
               marginBottom: 'var(--space-4)',
-              fontSize: 'var(--font-size-sm)'
+              fontSize: 'var(--font-size-sm)',
+              textAlign: 'center'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-                <span>🤖 ML Model Score:</span>
-                <span style={{ fontWeight: 'var(--font-weight-bold)' }}>{(baseModelScore * 100).toFixed(1)}%</span>
-              </div>
-              {adjustmentFactor !== 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-                  <span>⚙️ Post-Processing Adjustment:</span>
-                  <span style={{ fontWeight: 'var(--font-weight-bold)', color: adjustmentFactor > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    {adjustmentFactor > 0 ? '+' : ''}{(adjustmentFactor * 100).toFixed(1)}%
-                  </span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: 'var(--space-2)' }}>
-                <span style={{ fontWeight: 'var(--font-weight-bold)' }}>🎯 Final Score:</span>
-                <span style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-base)' }}>{(confidenceScore * 100).toFixed(1)}%</span>
+              <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-size-lg)' }}>
+                {(confidenceScore * 100).toFixed(1)}% Fake
               </div>
             </div>
           )}
@@ -374,18 +361,6 @@ const ResultPage = () => {
           </div>
         )}
 
-        {/* ✅ NEW: External Validation Influence Note ────────────────────────────────── */}
-        {externalValidationInfluence && (
-          <div className="result-external-note card-elevated" style={{
-            backgroundColor: 'var(--bg-info-light)',
-            borderLeft: '4px solid var(--color-info)'
-          }}>
-            <h3>📋 Analysis Notes</h3>
-            <p style={{ color: 'var(--text-primary)', marginTop: 'var(--space-2)' }}>
-              {externalValidationInfluence}
-            </p>
-          </div>
-        )}
 
         {/* ✅ NEW: RED FLAGS CARD ────────────────────────────────── */}
         {redFlagsDetected && redFlagsDetected.length > 0 && (
@@ -411,39 +386,11 @@ const ResultPage = () => {
                   padding: 'var(--space-3)',
                   backgroundColor: 'var(--bg-secondary)',
                   borderRadius: 'var(--radius-md)',
-                  borderLeft: '3px solid var(--color-danger)'
+                  borderLeft: '3px solid var(--color-danger)',
+                  fontWeight: 'var(--font-weight-bold)',
+                  color: 'var(--text-primary)'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
-                    <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)' }}>
-                      {flag.type}
-                    </div>
-                    <span style={{ 
-                      padding: '0.25rem 0.75rem',
-                      backgroundColor: 'var(--color-danger)',
-                      color: 'white',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: 'var(--font-size-sm)',
-                      fontWeight: 'var(--font-weight-bold)'
-                    }}>
-                      {(flag.weight * 100).toFixed(0)}% weight
-                    </span>
-                  </div>
-                  <div style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-1)' }}>
-                    {flag.description}
-                  </div>
-                  {flag.evidence && (
-                    <div style={{ 
-                      color: 'var(--text-muted)',
-                      fontSize: 'var(--font-size-sm)',
-                      fontStyle: 'italic',
-                      padding: 'var(--space-2)',
-                      backgroundColor: 'var(--bg-primary)',
-                      borderRadius: 'var(--radius-sm)',
-                      marginTop: 'var(--space-2)'
-                    }}>
-                      Evidence: {flag.evidence}
-                    </div>
-                  )}
+                  🚩 {flag.type}
                 </div>
               ))}
             </div>

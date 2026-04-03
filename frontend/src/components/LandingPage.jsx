@@ -66,6 +66,24 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Corporate Jobs Notice */}
+      <section className="container" style={{ marginTop: '3rem', marginBottom: '2rem' }}>
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '2px solid #0EA5E9',
+          borderRadius: '0.75rem',
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0369A1', marginBottom: '0.5rem' }}>
+            💼 Corporate Job Roles Only
+          </div>
+          <p style={{ color: '#0369A1', margin: 0 }}>
+            This AI detection system is optimized for analyzing corporate job positions. For freelance, gig work, internships, or non-traditional roles, results may vary.
+          </p>
+        </div>
+      </section>
+
       {/* Stats */}
       <section className="container">
         <div className="landing-stats stagger-children">

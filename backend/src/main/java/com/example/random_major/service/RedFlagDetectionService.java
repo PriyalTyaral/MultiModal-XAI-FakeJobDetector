@@ -122,6 +122,12 @@ public class RedFlagDetectionService {
         Pattern.CASE_INSENSITIVE
     );
 
+    // Negation modifiers - for flipping RED flags to GREEN (sign of real post)
+    private static final Pattern NEGATION_MODIFIER_PATTERN = Pattern.compile(
+        "\\b(no|not|never|avoid|don't|don't use|don't contact|no need|no telegram|no whatsapp)\\b",
+        Pattern.CASE_INSENSITIVE
+    );
+
     // Phishing login gates
     private static final Pattern PHISHING_GATE_PATTERN = Pattern.compile(
         "\\b(login with|sign in to|authenticate|create account to apply|download the app|install extension)\\b",
@@ -247,6 +253,79 @@ public class RedFlagDetectionService {
         return flags;
     }
 
+    /**
+     * ENHANCED: Detect red flags with company verification context
+     * 
+     * This overloaded method accepts company verification data to provide context-aware weighting.
+     * For example, strong company verification lowers PROCESS_INCONSISTENCY weight from 0.35 to 0.05-0.10
+     * because legitimate high-level companies may skip interview details to keep posts concise.
+     * 
+     * @param jobText The job posting text
+     * @param companyName The company name (for context)
+     * @param isCompanyVerified Whether the company is verified/legitimate
+     * @return List of detected red flags with context-aware weighting
+     */
+    public List<RedFlag> detectRedFlags(String jobText, String companyName, boolean isCompanyVerified) {
+        List<RedFlag> flags = new ArrayList<>();
+
+        if (jobText == null || jobText.trim().isEmpty()) {
+            return flags;
+        }
+
+        String textLower = jobText.toLowerCase();
+        
+        log.info("🚩 ENHANCED RED FLAG DETECTION STARTED (with company context)...");
+
+        // ─────────────────────────────────────────────────────────
+        // CATEGORY A: Financial & Economic Red Flags
+        // ─────────────────────────────────────────────────────────
+        log.debug("→ Checking Financial & Economic red flags...");
+        detectSkillPayMismatch(textLower, flags);
+        detectEquipmentCheckScam(textLower, flags);
+        detectUpfrontPayment(textLower, flags);
+        detectVagueBenefits(textLower, flags);
+
+        // ─────────────────────────────────────────────────────────
+        // CATEGORY B: Communication & Platform Red Flags
+        // ─────────────────────────────────────────────────────────
+        log.debug("→ Checking Communication & Platform red flags...");
+        detectNonCorporateChannel(textLower, flags);
+        detectEmailDomainMismatch(textLower, flags);
+        detectDomainSpoofing(textLower, flags);
+        detectPhishingGate(textLower, flags);
+
+        // ─────────────────────────────────────────────────────────
+        // CATEGORY C: Structural & Technical Red Flags
+        // ─────────────────────────────────────────────────────────
+        log.debug("→ Checking Structural & Technical red flags...");
+        detectHyphenatedDomain(textLower, flags);
+        detectDomainMismatch(textLower, flags);
+        detectAIPerfection(textLower, flags);
+
+        // ─────────────────────────────────────────────────────────
+        // CATEGORY D: Behavioral & Contextual Red Flags (with company context)
+        // ─────────────────────────────────────────────────────────
+        log.debug("→ Checking Behavioral & Contextual red flags (with company context)...");
+        detectExtremeUrgency(textLower, flags);
+        detectProcessInconsistency(textLower, flags, isCompanyVerified);  // Pass company context
+        detectGlobalLocalMismatch(textLower, flags);
+        detectSocialProofGap(textLower, flags);
+
+        // ─────────────────────────────────────────────────────────
+        // LEGACY COMPATIBILITY: Keep basic detection
+        // ─────────────────────────────────────────────────────────
+        log.debug("→ Checking legacy patterns...");
+        detectHighSalary(jobText, flags);
+
+        log.info("✅ RED FLAG DETECTION COMPLETED (ENHANCED): {} flags detected", flags.size());
+        for (RedFlag flag : flags) {
+            log.info("   • [{}] {} (weight: {}, evidence: {})", 
+                flag.getType(), flag.getDescription(), flag.getWeight(), flag.getEvidence());
+        }
+
+        return flags;
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // CATEGORY A: FINANCIAL & ECONOMIC RED FLAG DETECTION
     // ═══════════════════════════════════════════════════════════════════
@@ -352,18 +431,41 @@ public class RedFlagDetectionService {
     // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * B1: Detect Non-Corporate Communication Channels
+     * B1: Detect Non-Corporate Communication Channels (with Negation Handler)
      * Telegram, WhatsApp, Discord, Signal, etc.
+     * 
+     * NEGATION HANDLER:
+     * - If channel mention has negation within 3 words → GREEN flag (sign of real post!)
+     * - Example: "Do NOT contact via Telegram" → GREEN (legitimate warning)
+     * - Example: "Contact on Telegram" → RED (fraud indicator)
      */
     private void detectNonCorporateChannel(String textLower, List<RedFlag> flags) {
-        if (NON_CORPORATE_CHANNEL_PATTERN.matcher(textLower).find()) {
-            flags.add(new RedFlag(
-                "NON_CORPORATE_CHANNEL",
-                WEIGHT_NON_CORPORATE_CHANNEL,
-                "[Communication] Non-corporate communication channel: Telegram, WhatsApp, Discord, Signal detected",
-                extractEvidence(textLower, NON_CORPORATE_CHANNEL_PATTERN)
-            ));
-            log.debug("   ⚠️  NON_CORPORATE_CHANNEL detected");
+        Matcher channelMatcher = NON_CORPORATE_CHANNEL_PATTERN.matcher(textLower);
+        
+        if (channelMatcher.find()) {
+            String channelMatch = channelMatcher.group();
+            int channelPos = channelMatcher.start();
+            
+            // Check for negation modifiers within 3 words before or after the channel mention
+            if (hasNegationModifierNearby(textLower, channelPos, 3)) {
+                // NEGATION DETECTED: This is a GREEN flag (sign of a REAL post!)
+                flags.add(new RedFlag(
+                    "NON_CORPORATE_CHANNEL_NEGATED",
+                    -0.4,  // NEGATIVE weight (LOWERS fake score - sign of legitimate post!)
+                    "[Communication] ✅ NEGATION HANDLER: Legitimate warning against using non-corporate channels (e.g., 'Do NOT contact via Telegram')",
+                    "Negation detected near: " + channelMatch
+                ));
+                log.debug("   ✅ NON_CORPORATE_CHANNEL NEGATED (flipped to GREEN - legitimate post!)");
+            } else {
+                // NO NEGATION: Standard RED flag
+                flags.add(new RedFlag(
+                    "NON_CORPORATE_CHANNEL",
+                    WEIGHT_NON_CORPORATE_CHANNEL,
+                    "[Communication] Non-corporate communication channel: Telegram, WhatsApp, Discord, Signal detected",
+                    extractEvidence(textLower, NON_CORPORATE_CHANNEL_PATTERN)
+                ));
+                log.debug("   ⚠️  NON_CORPORATE_CHANNEL detected (RED flag)");
+            }
         }
     }
 
@@ -529,22 +631,45 @@ public class RedFlagDetectionService {
     }
 
     /**
-     * D2: Detect Process Inconsistency
+     * D2: Detect Process Inconsistency (with Behavioral Weighting Adjustment)
      * Technical role without interview mention
+     * 
+     * BEHAVIORAL WEIGHTING ADJUSTMENT:
+     * - Base weight: 0.35 (MEDIUM risk)
+     * - IF company is verified/strong: weight reduced to 0.08 (5-10% weight)
+     * - Rationale: Real high-level companies often skip interview details to keep posts concise
+     * - Example: "Stripe" verified company → 0.08 weight (trust the lack of detail)
+     * - Example: Unknown company → 0.35 weight (suspicious omission)
      */
     private void detectProcessInconsistency(String textLower, List<RedFlag> flags) {
+        detectProcessInconsistency(textLower, flags, false);  // Default to unverified
+    }
+
+    /**
+     * D2: Detect Process Inconsistency (with Behavioral Weighting Adjustment)
+     * Overloaded version with company verification context
+     */
+    private void detectProcessInconsistency(String textLower, List<RedFlag> flags, boolean isCompanyVerified) {
         boolean isTechRole = textLower.contains("software") || textLower.contains("developer") || 
                             textLower.contains("engineer") || textLower.contains("technical");
         boolean hasInterview = INTERVIEW_MARKER_PATTERN.matcher(textLower).find();
         
         if (isTechRole && !hasInterview && textLower.length() < 500) {
+            // BEHAVIORAL WEIGHTING ADJUSTMENT
+            double weight = isCompanyVerified ? 0.08 : WEIGHT_PROCESS_INCONSISTENCY;  // 0.08 vs 0.35
+            String description = isCompanyVerified ? 
+                "[Behavioral] Process omitted (LOW risk - trusted company): Technical role without interview details (normal for high-level companies)" :
+                "[Behavioral] Process inconsistency: Technical role without mention of interview/assessment";
+            
             flags.add(new RedFlag(
                 "PROCESS_INCONSISTENCY",
-                WEIGHT_PROCESS_INCONSISTENCY,
-                "[Behavioral] Process inconsistency: Technical role without mention of interview/assessment",
-                "Tech role detected but no interview process mentioned"
+                weight,
+                description,
+                "Tech role detected but no interview process mentioned" + 
+                (isCompanyVerified ? " (Company verified - accepting omission)" : "")
             ));
-            log.debug("   ⚠️  PROCESS_INCONSISTENCY detected");
+            log.debug("   {} PROCESS_INCONSISTENCY detected (weight: {}, company verified: {})", 
+                isCompanyVerified ? "ℹ️ " : "⚠️ ", weight, isCompanyVerified);
         }
     }
 
@@ -717,6 +842,44 @@ public class RedFlagDetectionService {
         if (evidence1 == null || evidence1.isEmpty()) return evidence2;
         if (evidence2 == null || evidence2.isEmpty()) return evidence1;
         return evidence1 + " | " + evidence2;
+    }
+
+    /**
+     * NEGATION HANDLER UTILITY
+     * Check if there are negation modifiers ("No", "Not", "Never", "Avoid") within N words of a specific position
+     * 
+     * Used to detect legitimate warnings like "Do NOT contact via Telegram" (GREEN flag)
+     * vs fraudulent channels like "Contact on Telegram" (RED flag)
+     * 
+     * @param text The full text to search
+     * @param targetPosition The character position of the flag trigger (e.g., "telegram")
+     * @param wordsAround Number of words to check before/after (typically 3)
+     * @return true if negation found nearby, false otherwise
+     */
+    private boolean hasNegationModifierNearby(String text, int targetPosition, int wordsAround) {
+        try {
+            // Extract a window of text around the target position
+            // Estimate: ~5 chars per word, so multiply by 5 for character count
+            int windowSize = wordsAround * 5;
+            int start = Math.max(0, targetPosition - windowSize);
+            int end = Math.min(text.length(), targetPosition + windowSize);
+            
+            String window = text.substring(start, end);
+            
+            // Check if negation modifier exists in this window
+            Matcher negationMatcher = NEGATION_MODIFIER_PATTERN.matcher(window);
+            boolean hasNegation = negationMatcher.find();
+            
+            if (hasNegation) {
+                log.debug("   → Negation detected in window: '{}'", window);
+                return true;
+            }
+            
+            return false;
+        } catch (Exception e) {
+            log.warn("Error checking negation modifiers: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**

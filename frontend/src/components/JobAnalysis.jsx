@@ -167,6 +167,23 @@ const JobAnalysis = () => {
           <p>Paste text or upload a file to check if a job posting is legitimate</p>
         </div>
 
+        {/* Corporate Jobs Notice */}
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '2px solid #0EA5E9',
+          borderRadius: '0.75rem',
+          padding: '1rem 1.5rem',
+          marginBottom: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0369A1', marginBottom: '0.25rem' }}>
+            💼 Optimized for Corporate Job Roles
+          </div>
+          <p style={{ color: '#0369A1', margin: 0, fontSize: '0.875rem' }}>
+            This detector is trained on corporate positions. For freelance, gig work, internships, or non-corporate roles, accuracy may differ.
+          </p>
+        </div>
+
         <div className="analysis-card card-elevated">
           {/* Tabs */}
           <div className="analysis-tabs">
