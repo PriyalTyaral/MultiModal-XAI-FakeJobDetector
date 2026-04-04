@@ -3,315 +3,180 @@ package com.example.random_major.service;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.random_major.model.CompanyVerificationResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * CompanyVerificationService: Validates company existence using OpenCorporate API with DNS fallback
- * 
- * DO NOT MODIFY PMML MODEL FEATURES
- * This service only provides company verification data for post-processing adjustments
- * 
- * FALLBACK STRATEGY:
- * 1. Try OpenCorporate API - Returns: companyExists, domain, confidence
- * 2. If API fails or returns null:
- *    - Perform DNS lookup on company name as domain
- *    - Check if domain has valid A/AAAA records
- *    - Compare domain with company name for spoofing detection
- */
 @Service
 public class CompanyVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(CompanyVerificationService.class);
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${opencorporate.api-url:https://api.opencorporates.com/v0.4}")
-    private String opencorporateApiUrl;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${opencorporate.api-url}")
+    private String baseUrl;
 
     @Value("${opencorporate.api-key:}")
-    private String opencorporateApiKey;
+    private String apiKey;
 
     @Value("${company.verification.use-fallback:true}")
     private boolean useFallback;
 
-    /**
-     * Verifies if a company exists using OpenCorporate API with DNS fallback
-     * 
-     * @param companyName The company name to verify
-     * @return CompanyVerificationResponse with verification status
-     */
     public CompanyVerificationResponse verifyCompany(String companyName) {
+
         long startTime = System.currentTimeMillis();
 
         try {
             if (companyName == null || companyName.trim().isEmpty()) {
-                return new CompanyVerificationResponse(
-                    false,
-                    "UNKNOWN",
-                    null,
-                    "Company name is required"
-                );
+                return new CompanyVerificationResponse(false, "UNKNOWN", null, "Company name missing");
             }
 
-            // ──────────────────────────────────────────────────────
-            // 🔍 PRIMARY: Try OpenCorporate API
-            // ──────────────────────────────────────────────────────
-            log.info("🔍 Verifying company '{}' via OpenCorporate API...", companyName);
-            CompanyVerificationResponse apiResult = verifyViaOpenCorporateAPI(companyName);
-            
-            if (apiResult != null && !apiResult.getStatus().equals("UNKNOWN")) {
-                apiResult.setApiCallTimeMs(System.currentTimeMillis() - startTime);
+            // 🔍 STEP 1: OpenCorporates API
+            CompanyVerificationResponse apiResult = verifyViaAPI(companyName);
+
+            if (apiResult != null) {
                 apiResult.setVerificationMethod("OPENCORPORATE_API");
+                apiResult.setApiCallTimeMs(System.currentTimeMillis() - startTime);
                 return apiResult;
             }
 
-            // ──────────────────────────────────────────────────────
-            // ⚠️  FALLBACK: DNS Lookup if API fails
-            // ──────────────────────────────────────────────────────
+            // ⚠️ STEP 2: DNS FALLBACK
             if (useFallback) {
-                log.info("⚠️  OpenCorporate API unavailable or returned no results, trying DNS fallback...");
-                CompanyVerificationResponse fallbackResult = verifyViaDNSLookup(companyName);
-                fallbackResult.setApiCallTimeMs(System.currentTimeMillis() - startTime);
-                fallbackResult.setVerificationMethod("DNS_FALLBACK");
-                return fallbackResult;
+                CompanyVerificationResponse dnsResult = verifyViaDNS(companyName);
+                dnsResult.setVerificationMethod("DNS_FALLBACK");
+                dnsResult.setApiCallTimeMs(System.currentTimeMillis() - startTime);
+                return dnsResult;
             }
 
-            // No result from API or fallback
-            CompanyVerificationResponse noResult = new CompanyVerificationResponse(
-                false,
-                "UNKNOWN",
-                null,
-                "Company verification unavailable (API and fallback failed)"
-            );
-            noResult.setApiCallTimeMs(System.currentTimeMillis() - startTime);
-            noResult.setVerificationMethod("NONE");
-            return noResult;
+            return new CompanyVerificationResponse(false, "UNKNOWN", null, "Verification failed");
 
         } catch (Exception e) {
-            log.error("❌ Company verification error: {}", e.getMessage(), e);
-            
-            CompanyVerificationResponse resp = new CompanyVerificationResponse(
-                false,
-                "UNKNOWN",
-                null,
-                "Company verification failed: " + e.getMessage()
-            );
-            resp.setApiCallTimeMs(System.currentTimeMillis() - startTime);
-            resp.setVerificationMethod("ERROR");
-            return resp;
+            log.error("❌ Error verifying company: {}", e.getMessage());
+            return new CompanyVerificationResponse(false, "UNKNOWN", null, "Error occurred");
         }
     }
 
-    /**
-     * PRIMARY VERIFICATION: OpenCorporate API
-     * Returns company information if found
-     * API Documentation: https://api.opencorporates.com/documentation/API-basics
-     * Search endpoint: /companies/search?q={companyName}&api_token={apiToken}
-     * 
-     * @param companyName The company name to verify
-     * @return CompanyVerificationResponse with OpenCorporate data or null if API fails
-     */
-    private CompanyVerificationResponse verifyViaOpenCorporateAPI(String companyName) {
+    // ===============================
+    // 🔍 OPEN CORPORATES API METHOD
+    // ===============================
+    private CompanyVerificationResponse verifyViaAPI(String companyName) {
+
         try {
-            if (opencorporateApiKey == null || opencorporateApiKey.trim().isEmpty()) {
-                log.warn("⚠️  OpenCorporate API key not configured, skipping API verification");
+            if (apiKey == null || apiKey.isEmpty()) {
+                log.warn("⚠️ API key missing, skipping API");
                 return null;
             }
 
-            // URL encode company name for API call
-            String encodedCompanyName = URLEncoder.encode(companyName, StandardCharsets.UTF_8);
-            String apiUrl = opencorporateApiUrl + "/companies/search?q=" + encodedCompanyName + "&api_token=" + opencorporateApiKey;
+            String encodedName = URLEncoder.encode(companyName, StandardCharsets.UTF_8);
 
-            log.debug("OpenCorporate API URL: {}...", opencorporateApiUrl + "/companies/search?q=...");
+            String url = baseUrl + "/companies/search?q=" + encodedName + "&api_token=" + apiKey;
 
-            // Prepare headers
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.set("Accept", "application/json");
+            log.info("🔍 Calling OpenCorporates API for: {}", companyName);
 
-            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
-            
-            try {
-                org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
-                    apiUrl,
-                    org.springframework.http.HttpMethod.GET,
-                    entity,
-                    Map.class
-                );
+            Map response = restTemplate.getForObject(url, Map.class);
 
-                if (response.getBody() == null) {
-                    log.warn("⚠️  OpenCorporate returned empty response for '{}'", companyName);
-                    return null;
+            if (response == null) return null;
+
+            Map results = (Map) response.get("results");
+            if (results == null) return null;
+
+            List companies = (List) results.get("companies");
+            if (companies == null || companies.isEmpty()) {
+                return new CompanyVerificationResponse(false, "UNKNOWN", null, "Company not found");
+            }
+
+            // Extract first company
+            Map companyWrapper = (Map) companies.get(0);
+            Map company = (Map) companyWrapper.get("company");
+
+            if (company == null) return null;
+
+            String name = (String) company.get("name");
+            String status = (String) company.get("current_status");
+            String registryUrl = (String) company.get("registry_url");
+
+            String normalizedStatus = "UNKNOWN";
+
+            if (status != null) {
+                if (status.toLowerCase().contains("active")) {
+                    normalizedStatus = "ACTIVE";
+                } else {
+                    normalizedStatus = "INACTIVE";
                 }
+            }
 
-                Map<String, Object> body = response.getBody();
-                Map<String, Object> results = (Map<String, Object>) body.get("results");
-                
-                if (results == null || results.isEmpty()) {
-                    log.info("📋 OpenCorporate: Company '{}' not found", companyName);
-                    return new CompanyVerificationResponse(
-                        false,
-                        "UNKNOWN",
-                        null,
-                        "Company not found in OpenCorporate database"
-                    );
-                }
+            log.info("✅ API VERIFIED: {} ({})", name, normalizedStatus);
 
-                java.util.List<Map<String, Object>> companies = (java.util.List<Map<String, Object>>) results.get("companies");
-                
-                if (companies == null || companies.isEmpty()) {
-                    log.info("📋 OpenCorporate: Company '{}' not found", companyName);
-                    return new CompanyVerificationResponse(
-                        false,
-                        "UNKNOWN",
-                        null,
-                        "Company not found in OpenCorporate database"
-                    );
-                }
-
-                // Get first result (most relevant)
-                Map<String, Object> company = companies.get(0);
-                String domain = (String) company.get("website");
-                String status = (String) company.get("status");
-                String companyNameFromAPI = (String) company.get("name");
-                
-                // If no domain from website field, try extracting from jurisdiction
-                if (domain == null || domain.isEmpty()) {
-                    domain = (String) company.get("jurisdiction_code");
-                }
-
-                if (companyNameFromAPI == null) {
-                    log.info("📋 OpenCorporate: Invalid company data for '{}'", companyName);
-                    return new CompanyVerificationResponse(
-                        false,
-                        "UNKNOWN",
-                        null,
-                        "Invalid company data in OpenCorporate database"
-                    );
-                }
-
-                // Determine status: active/ACTIVE
-                String normalizedStatus = (status != null && (status.equalsIgnoreCase("Active") || status.equalsIgnoreCase("active"))) 
-                    ? "ACTIVE" 
-                    : "INACTIVE";
-
-                log.info("✅ OpenCorporate: Company '{}' verified - Status: {}", companyNameFromAPI, normalizedStatus);
-
-                return new CompanyVerificationResponse(
+            return new CompanyVerificationResponse(
                     true,
                     normalizedStatus,
-                    domain,
-                    "Company verified via OpenCorporate - Status: " + normalizedStatus
-                );
-
-            } catch (org.springframework.web.client.HttpClientErrorException.NotFound e) {
-                log.info("📋 OpenCorporate: Company '{}' not found (404)", companyName);
-                return new CompanyVerificationResponse(
-                    false,
-                    "UNKNOWN",
-                    null,
-                    "Company not found in OpenCorporate database"
-                );
-            } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
-                log.error("❌ OpenCorporate: Invalid API key (401 Unauthorized)");
-                return null;
-            }
-
-        } catch (RestClientException e) {
-            log.warn("❌ OpenCorporate API connection failed: {}", e.getMessage());
-            return null;
+                    registryUrl,
+                    "Verified via OpenCorporates"
+            );
 
         } catch (Exception e) {
-            log.warn("❌ OpenCorporate API error: {}", e.getMessage());
+            log.warn("❌ API failed: {}", e.getMessage());
             return null;
         }
     }
 
-    /**
-     * FALLBACK VERIFICATION: DNS Lookup
-     * Attempts to resolve company name as domain and verifies DNS records
-     * 
-     * STRATEGY:
-     * 1. Convert company name to potential domain (remove spaces/special chars)
-     * 2. Try common TLDs (.com, .org, .net, .io)
-     * 3. Perform DNS A record lookup
-     * 4. Return verification based on DNS availability
-     * 
-     * @param companyName The company name to verify
-     * @return CompanyVerificationResponse based on DNS availability
-     */
-    private CompanyVerificationResponse verifyViaDNSLookup(String companyName) {
-        try {
-            // Convert company name to potential domain
-            // e.g., "Google Inc" -> "google.com", "TechCorp" -> "techcorp.com"
-            String potentialDomain = companyName.toLowerCase()
-                .replaceAll("\\s+", "")  // Remove spaces
-                .replaceAll("[^a-z0-9-]", "")  // Remove special chars
-                .replaceAll("-+", "-");  // Normalize dashes
+    // ===============================
+    // 🌐 DNS FALLBACK METHOD
+    // ===============================
+    private CompanyVerificationResponse verifyViaDNS(String companyName) {
 
-            if (potentialDomain.isEmpty()) {
-                log.warn("⚠️  Could not convert company name '{}' to domain", companyName);
-                return new CompanyVerificationResponse(
+        try {
+            // Clean company name
+            String cleaned = companyName.toLowerCase()
+                    .replaceAll("(pvt|ltd|limited|inc)", "")
+                    .replaceAll("\\s+", "")
+                    .replaceAll("[^a-z0-9]", "");
+
+            if (cleaned.isEmpty()) {
+                return new CompanyVerificationResponse(false, "UNKNOWN", null, "Invalid company name");
+            }
+
+            String[] domains = {
+                    cleaned + ".com",
+                    cleaned + ".org",
+                    cleaned + ".net"
+            };
+
+            for (String domain : domains) {
+                try {
+                    InetAddress.getByName(domain);
+
+                    log.info("✅ DNS FOUND: {}", domain);
+
+                    return new CompanyVerificationResponse(
+                            true,
+                            "ACTIVE",
+                            domain,
+                            "Verified via DNS"
+                    );
+
+                } catch (Exception ignored) {}
+            }
+
+            log.warn("⚠️ No DNS found for {}", companyName);
+
+            return new CompanyVerificationResponse(
                     false,
                     "UNKNOWN",
                     null,
-                    "Could not generate domain from company name"
-                );
-            }
-            
-            // Try common TLDs if not already present
-            String[] domainVariants = {
-                potentialDomain + ".com",
-                potentialDomain + ".org",
-                potentialDomain + ".net",
-                potentialDomain + ".io"
-            };
-
-            for (String domain : domainVariants) {
-                try {
-                    // Attempt DNS lookup (A record)
-                    InetAddress.getByName(domain);
-                    
-                    log.info("✅ DNS Fallback: Domain '{}' resolved successfully", domain);
-                    return new CompanyVerificationResponse(
-                        true,
-                        "ACTIVE",
-                        domain,
-                        "Company verified via DNS lookup - Domain has valid A records"
-                    );
-
-                } catch (java.net.UnknownHostException e) {
-                    log.debug("  DNS lookup failed for '{}': {}", domain, e.getMessage());
-                    continue;
-                }
-            }
-
-            // No domain variant resolved
-            log.warn("⚠️  DNS fallback: No domain found for company '{}'", companyName);
-            return new CompanyVerificationResponse(
-                false,
-                "UNKNOWN",
-                null,
-                "Company domain not found via DNS lookup"
+                    "Domain not found"
             );
 
         } catch (Exception e) {
-            log.warn("❌ DNS fallback error: {}", e.getMessage());
-            return new CompanyVerificationResponse(
-                false,
-                "UNKNOWN",
-                null,
-                "DNS lookup failed: " + e.getMessage()
-            );
+            return new CompanyVerificationResponse(false, "UNKNOWN", null, "DNS error");
         }
     }
 }
