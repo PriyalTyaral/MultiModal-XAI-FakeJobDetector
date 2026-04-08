@@ -39,7 +39,6 @@ public class DomainValidationService {
                 }
             }
 
-            boolean companyDNS = verifyDomainViaDNS(companyDomain);
             boolean extractedDNS = verifyDomainViaDNS(extractedDomain);
 
             ComparisonResult result = compareDomains(companyDomain, extractedDomain);
@@ -80,6 +79,7 @@ public class DomainValidationService {
             InetAddress.getByName(domain);
             return true;
         } catch (Exception e) {
+            log.debug("DNS verification failed for domain: {}", domain);
             return false;
         }
     }
@@ -107,6 +107,7 @@ public class DomainValidationService {
             return host.toLowerCase();
 
         } catch (Exception e) {
+            log.debug("Domain extraction failed for URL: {}", url);
             return null;
         }
     }
@@ -119,6 +120,7 @@ public class DomainValidationService {
             if (email == null || !email.contains("@")) return null;
             return email.substring(email.lastIndexOf("@") + 1).toLowerCase();
         } catch (Exception e) {
+            log.debug("Email domain extraction failed for email: {}", email);
             return null;
         }
     }

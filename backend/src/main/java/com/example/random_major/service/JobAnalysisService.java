@@ -99,45 +99,25 @@ public class JobAnalysisService {
     }
 
     // ---------------------------------------------------
-    // ✅ FILE ANALYSIS (with unified pipeline)
+    // ✅ FILE ANALYSIS (legacy - now delegates to unified pipeline)
     // ---------------------------------------------------
+    /**
+     * DEPRECATED: This method is maintained for backward compatibility only.
+     * Please use analyzeFileWithUnifiedPipeline() instead.
+     * 
+     * This method extracts text from a file and delegates to the unified pipeline,
+     * ensuring consistent processing regardless of input type.
+     * 
+     * @param file The uploaded file
+     * @param fileType File type: audio, image, or document
+     * @param userId User ID (optional)
+     * @return EnhancedJobResult with all validations performed
+     * @deprecated Use {@link #analyzeFileWithUnifiedPipeline(File, String, String, String, String, String)} instead
+     */
+    @Deprecated
     public EnhancedJobResult analyzeFromFile(File file, String fileType, String userId) {
-        try {
-            log.info("📁 Processing file upload - Type: {}", fileType);
-            String extractedText;
-
-            if (fileType.equalsIgnoreCase("audio")) {
-                log.info("🎤 Transcribing audio...");
-                extractedText = audioService.transcribeAudio(file);
-            } else if (fileType.equalsIgnoreCase("image")) {
-                log.info("🖼️  Extracting text from image via OCR...");
-                extractedText = ocrService.extractTextFromImage(file);
-            } else if (fileType.equalsIgnoreCase("document")) {
-                log.info("📄 Extracting text from document...");
-                extractedText = textExtractService.extractText(file);
-            } else {
-                log.error("❌ Unsupported file type: {}", fileType);
-                EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
-                return errorResult;
-            }
-
-            if (extractedText == null || extractedText.trim().length() < 20) {
-                log.warn("❌ Insufficient text extracted from file (length: {})", 
-                    extractedText != null ? extractedText.length() : 0);
-                EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
-                return errorResult;
-            }
-
-            log.info("✅ Text extracted successfully - Length: {} characters", extractedText.length());
-            
-            // ✅ UNIFIED PIPELINE: Call enhanced analysis with auto-extracted entities
-            return analyzeWithUnifiedPipeline(extractedText, null, null, null, userId, fileType);
-
-        } catch (Exception e) {
-            log.error("❌ File processing failed: {}", e.getMessage(), e);
-            EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
-            return errorResult;
-        }
+        log.warn("⚠️  analyzeFromFile() is DEPRECATED - consider using analyzeFileWithUnifiedPipeline() instead");
+        return analyzeFileWithUnifiedPipeline(file, fileType, null, null, null, userId);
     }
 
     // ---------------------------------------------------
@@ -190,14 +170,14 @@ public class JobAnalysisService {
             String contactEmail,
             String userId
     ) {
-        log.info("🔍 Starting enhanced analysis with company verification...");
-        return (EnhancedJobResult) analyzeWithUnifiedPipeline(
+        log.info("🔍 Starting enhanced analysis with company verification (TEXT input)...");
+        return analyzeWithUnifiedPipeline(
             jobText, 
             companyName, 
             jobPostingUrl, 
             contactEmail, 
             userId, 
-            "TEXT"
+            "TEXT"  // Explicitly TEXT input type
         );
     }
 
@@ -231,109 +211,187 @@ public class JobAnalysisService {
     ) {
         try {
             log.info("═══════════════════════════════════════════════════════════");
-            log.info("🔄 UNIFIED PIPELINE: Starting analysis for {} input", 
-                inputType != null ? inputType : "TEXT");
+            log.info("🔄 UNIFIED PIPELINE: Starting analysis");
             log.info("═══════════════════════════════════════════════════════════");
             
+            // ═══════════════════════════════════════════════════════════
+            // STEP 0: INPUT VALIDATION & NORMALIZATION
+            // ═══════════════════════════════════════════════════════════
+            log.info("📋 STEP 0: Validating and normalizing input...");
+            
+            // Validate and normalize job text
             if (jobText == null || jobText.trim().isEmpty()) {
-                log.error("❌ Job text cannot be null or empty");
+                log.error("❌ Job text is null or empty - cannot proceed");
                 return new EnhancedJobResult("error", 0.0, 0.0);
             }
+            
+            // Trim whitespace and normalize text
+            jobText = jobText.trim();
+            log.info("   Text length: {} characters", jobText.length());
+            
+            // Validate text has sufficient content
+            if (jobText.length() < 20) {
+                log.error("❌ Text is too short ({} chars) - minimum 20 chars required", jobText.length());
+                return new EnhancedJobResult("error", 0.0, 0.0);
+            }
+            
+            // Normalize input type
+            String normalizedInputType = inputType != null ? inputType.toUpperCase().trim() : "TEXT";
+            log.info("   Input Type: {}", normalizedInputType);
+            log.info("   User Company: {}", userCompanyName != null ? userCompanyName : "NOT PROVIDED");
+            log.info("   User URL: {}", userJobPostingUrl != null ? userJobPostingUrl : "NOT PROVIDED");
+            log.info("   User Email: {}", userContactEmail != null ? userContactEmail : "NOT PROVIDED");
+            log.info("✅ Input validation passed");
 
             // ═══════════════════════════════════════════════════════════
             // STEP 1: ENTITY EXTRACTION (MANDATORY for all input types)
             // ═══════════════════════════════════════════════════════════
-            log.info("📋 STEP 1: Extracting entities from text...");
+            log.info("� STEP 1: Extracting entities from text...");
+            log.info("   Processing as: {} input", normalizedInputType);
             ExtractedData extractedData = entityExtractionService.extractFromText(jobText);
-            log.info("✅ Entity extraction completed");
-            log.info("   - Company: '{}'", extractedData.getCompanyName());
-            log.info("   - URL: '{}'", extractedData.getUrl());
-            log.info("   - Domain: '{}'", extractedData.getDomain());
+            
+            // Validate extraction
+            if (extractedData == null) {
+                log.error("⚠️  Entity extraction returned null, using empty ExtractedData");
+                extractedData = new ExtractedData(null, null, null);
+            }
+            
+            log.info("✅ Entity extraction COMPLETED (ALWAYS applied for {})", normalizedInputType);
+            log.info("   - Company: '{}' ({})", 
+                extractedData.getCompanyName() != null ? extractedData.getCompanyName() : "NULL",
+                extractedData.getCompanyName() != null ? "EXTRACTED" : "NOT FOUND");
+            log.info("   - URL: '{}' ({})", 
+                extractedData.getUrl() != null ? extractedData.getUrl() : "NULL",
+                extractedData.getUrl() != null ? "EXTRACTED" : "NOT FOUND");
+            log.info("   - Domain: '{}' ({})", 
+                extractedData.getDomain() != null ? extractedData.getDomain() : "NULL",
+                extractedData.getDomain() != null ? "EXTRACTED" : "NOT FOUND");
 
             // ═══════════════════════════════════════════════════════════
             // STEP 2: AUTO-FILL company name (use extracted if user didn't provide)
             // ═══════════════════════════════════════════════════════════
             log.info("🔍 STEP 2: Determining company name to use for validation...");
-            String companyNameForValidation = userCompanyName;
+            String companyNameForValidation = null;
+            String companySource = "SOURCE_UNKNOWN";
             
-            if (companyNameForValidation == null || companyNameForValidation.trim().isEmpty()) {
-                companyNameForValidation = extractedData.getCompanyName();
-                log.info("✅ Using extracted company name: '{}'", companyNameForValidation);
-            } else {
-                log.info("✅ Using user-provided company name: '{}'", userCompanyName);
+            // Priority 1: User-provided company name
+            if (userCompanyName != null && !userCompanyName.trim().isEmpty()) {
+                companyNameForValidation = userCompanyName.trim();
+                companySource = "SOURCE_USER";
+                log.info("✅ Using USER-PROVIDED company name: '{}'", companyNameForValidation);
+            }
+            // Priority 2: Extracted company name
+            else if (extractedData.getCompanyName() != null && !extractedData.getCompanyName().trim().isEmpty()) {
+                companyNameForValidation = extractedData.getCompanyName().trim();
+                companySource = "SOURCE_EXTRACTED";
+                log.info("✅ Using EXTRACTED company name: '{}'", companyNameForValidation);
+            }
+            // Priority 3: None available
+            else {
+                log.warn("⚠️  No company name available (not provided by user, not extracted from text)");
+                companyNameForValidation = null;
+                companySource = "SOURCE_NONE";
             }
 
             // Determine URL and email to use
-            String urlForValidation = userJobPostingUrl != null ? userJobPostingUrl : extractedData.getUrl();
-            String emailForValidation = userContactEmail != null ? userContactEmail : extractedData.getDomain();
+            String urlForValidation = userJobPostingUrl != null && !userJobPostingUrl.trim().isEmpty() 
+                ? userJobPostingUrl.trim() 
+                : extractedData.getUrl();
+            String urlSource = userJobPostingUrl != null ? "SOURCE_USER" : "SOURCE_EXTRACTED";
+            
+            String emailForValidation = userContactEmail != null && !userContactEmail.trim().isEmpty()
+                ? userContactEmail.trim()
+                : extractedData.getDomain();
+            String emailSource = userContactEmail != null ? "SOURCE_USER" : "SOURCE_EXTRACTED";
+            
+            log.info("   Company: {} [{}]", companyNameForValidation, companySource);
+            log.info("   URL: {} [{}]", urlForValidation, urlSource);
+            log.info("   Email/Domain: {} [{}]", emailForValidation, emailSource);
 
             // ═══════════════════════════════════════════════════════════
             // STEP 3: ML PREDICTION (base score from PMML model)
             // ═══════════════════════════════════════════════════════════
-            log.info("📊 STEP 3: Running ML model prediction...");
+            log.info("📊 STEP 3: Running ML model prediction on {} input text ({} chars)...", 
+                normalizedInputType, jobText.length());
             Map<String, Object> result = modelEvaluatorService.predict(jobText);
             double baseModelScore = 
                     ((Number) result.getOrDefault("probability_fake", 0.0)).doubleValue();
-            log.info("✅ Base model score: {} ({}%)", baseModelScore, (int)(baseModelScore * 100));
+            log.info("✅ ML prediction completed");
+            log.info("   Base model score: {} ({}%)", baseModelScore, (int)(baseModelScore * 100));
+            log.info("   Prediction: {}", baseModelScore >= 0.5 ? "FAKE" : "REAL");
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 4: RED FLAG DETECTION
+            // STEP 4: RED FLAG DETECTION (same logic for all input types)
             // ═══════════════════════════════════════════════════════════
-            log.info("🚩 STEP 4: Running red flag detection...");
+            log.info("🚩 STEP 4: Running red flag detection on {} input...", normalizedInputType);
             java.util.List<com.example.random_major.model.RedFlag> redFlags = 
                     redFlagDetectionService.detectRedFlags(jobText);
             double redFlagScore = redFlagDetectionService.calculateRedFlagScore(redFlags);
-            log.info("✅ Red flag detection completed: {} flags detected, score: {}", 
-                redFlags.size(), redFlagScore);
+            log.info("✅ Red flag detection COMPLETED (applied to {} input)", normalizedInputType);
+            log.info("   Red flags detected: {}", redFlags.size());
+            log.info("   Red flag score: {} (severity)", redFlagScore);
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 5: COMPANY VERIFICATION
+            // STEP 5: COMPANY VERIFICATION (using extracted/provided company name)
             // ═══════════════════════════════════════════════════════════
-            log.info("🏢 STEP 5: Verifying company: '{}'", companyNameForValidation);
+            log.info("🏢 STEP 5: Verifying company (source: {})...", companySource);
             CompanyVerificationResponse companyVerification = null;
             
             if (companyNameForValidation != null && !companyNameForValidation.isEmpty()) {
+                log.info("   Verifying: '{}' [from {}]", companyNameForValidation, companySource);
                 companyVerification = companyVerificationService.verifyCompany(companyNameForValidation);
+            } else {
+                log.warn("   ⚠️  No company name to verify (not provided and not extracted)");
             }
             
             if (companyVerification == null) {
+                log.warn("   ⚠️  Company verification failed or returned null");
                 companyVerification = new CompanyVerificationResponse(
                     false, "UNKNOWN", null, "Company verification unavailable or not performed"
                 );
             }
-            log.info("✅ Company verification completed - Status: {}", companyVerification.getStatus());
+            log.info("✅ Company verification COMPLETED - Status: {}", companyVerification.getStatus());
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 6: DOMAIN VALIDATION
+            // STEP 6: DOMAIN VALIDATION (using extracted URLs/emails and verified company)
             // ═══════════════════════════════════════════════════════════
-            log.info("🔗 STEP 6: Validating domain...");
+            log.info("🔗 STEP 6: Validating domain (for {} input)...", normalizedInputType);
             DomainValidationResponse domainValidation = null;
             
             String companyDomainForValidation = null;
             if (companyVerification.isExists() && companyVerification.getWebsite() != null) {
                 companyDomainForValidation = companyVerification.getWebsite();
-                log.info("   Using verified company domain: {}", companyDomainForValidation);
+                log.info("   Using verified company domain: {} (from company verification)", companyDomainForValidation);
             } else {
-                log.info("   Company not verified, will validate against posting domains...");
+                log.warn("   Company not verified, will validate against posting domains only");
             }
             
+            // Determine if validation inputs are available
+            boolean hasUrlToValidate = urlForValidation != null && !urlForValidation.isEmpty();
+            boolean hasEmailToValidate = emailForValidation != null && !emailForValidation.isEmpty();
+            
             // Always attempt domain validation if URL or email is provided
-            if ((urlForValidation != null && !urlForValidation.isEmpty()) || 
-                (emailForValidation != null && !emailForValidation.isEmpty())) {
+            if (hasUrlToValidate || hasEmailToValidate) {
+                log.info("   Validation inputs available - URL: {} [{}], Email: {} [{}]",
+                    hasUrlToValidate ? "YES" : "NO", urlSource,
+                    hasEmailToValidate ? "YES" : "NO", emailSource);
                 domainValidation = domainValidationService.validateDomain(
                     companyDomainForValidation,
                     urlForValidation,
                     emailForValidation
                 );
-                log.info("✅ Domain validation completed");
+                log.info("✅ Domain validation COMPLETED (for {} input)", normalizedInputType);
+                if (domainValidation != null) {
+                    log.info("   Match: {}, Risk Score: {}", domainValidation.isMatch(), domainValidation.getRiskScore());
+                }
             } else {
-                log.info("⚠️  No URL or email to validate");
+                log.warn("   ⚠️  No URL or email available to validate (not provided and not extracted)");
             }
 
             // ═══════════════════════════════════════════════════════════
             // STEP 7: POST-PROCESSING (adjust score based on validation)
             // ═══════════════════════════════════════════════════════════
-            log.info("⚙️  STEP 7: Applying post-processing adjustments...");
+            log.info("⚙️  STEP 7: Applying post-processing adjustments (for {} input)...", normalizedInputType);
             PredictionService.PostProcessingResult postProcessing = 
                     predictionService.applyPostProcessing(
                         baseModelScore,
@@ -346,23 +404,25 @@ public class JobAnalysisService {
             
             if (redFlagScore > 0) {
                 postProcessedScore = redFlagDetectionService.applyRedFlagScaling(postProcessedScore, redFlagScore);
-                log.info("   Applied red flag scaling: {} → {}", 
-                    postProcessing.getAdjustedScore(), postProcessedScore);
+                log.info("   Red flag scaling applied: {} → {} (severity: {})", 
+                    postProcessing.getAdjustedScore(), postProcessedScore, redFlagScore);
             }
-            log.info("✅ Adjustment factor: {}, Final score: {} ({}%)", 
-                adjustmentFactor, postProcessedScore, (int)(postProcessedScore * 100));
+            log.info("✅ Post-processing COMPLETED");
+            log.info("   Base → Adjusted: {}% → {}% (factor: {})", 
+                (int)(baseModelScore * 100), (int)(postProcessedScore * 100), adjustmentFactor);
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 8: LIME EXPLANATION (interpretability)
+            // STEP 8: LIME EXPLANATION (interpretability - same for all inputs)
             // ═══════════════════════════════════════════════════════════
-            log.info("💡 STEP 8: Generating LIME explanations...");
+            log.info("💡 STEP 8: Generating LIME explanations for {} input...", normalizedInputType);
             LimeService.LimeResult limeResult;
             try {
                 limeResult = limeService.explain(jobText, defaultNumFeatures, defaultOutputFormat, userId);
-                log.info("✅ LIME explanation completed - {} features, status: {}", 
-                    limeResult.explanations.size(), limeResult.cacheStatus);
+                log.info("✅ LIME explanation COMPLETED (for {} input)", normalizedInputType);
+                log.info("   Features: {}, Status: {}, Latency: {}ms", 
+                    limeResult.explanations.size(), limeResult.cacheStatus, limeResult.latencyMs);
             } catch (Exception e) {
-                log.error("⚠️  LIME explanation failed: {}", e.getMessage());
+                log.error("⚠️  LIME explanation failed for {} input: {}", normalizedInputType, e.getMessage());
                 limeResult = LimeService.LimeResult.error(0);
             }
 
@@ -419,16 +479,21 @@ public class JobAnalysisService {
             }
 
             // ═══════════════════════════════════════════════════════════
-            // SUMMARY
+            // SUMMARY: Pipeline execution complete
             // ═══════════════════════════════════════════════════════════
             log.info("═══════════════════════════════════════════════════════════");
-            log.info("✅ PIPELINE COMPLETE");
-            log.info("   Input Type: {}", inputType);
+            log.info("✅ UNIFIED PIPELINE COMPLETE");
+            log.info("═══════════════════════════════════════════════════════════");
+            log.info("🔄 PIPELINE EXECUTION SUMMARY:");
+            log.info("   Input Type: {} (unified processing)", normalizedInputType);
+            log.info("   Text Length: {} characters", jobText.length());
             log.info("   Prediction: {} (confidence: {}%)", finalPrediction, (int)(finalScore * 100));
-            log.info("   Company: {} (Status: {})", companyNameForValidation, companyVerification.getStatus());
-            log.info("   Red Flags: {}", redFlags.size());
-            log.info("   Adjustment: {} (base: {} → final: {}%)", 
-                adjustmentFactor, (int)(baseModelScore * 100), (int)(finalScore * 100));
+            log.info("   Company Name: {} [{}]", companyNameForValidation, companySource);
+            log.info("   Company Status: {}", companyVerification.getStatus());
+            log.info("   Red Flags Detected: {}", redFlags.size());
+            log.info("   Score Adjustment: {}% → {}% (factor: {})", 
+                (int)(baseModelScore * 100), (int)(finalScore * 100), adjustmentFactor);
+            log.info("   Steps Applied: EXTRACTION → PREDICTION → RED_FLAGS → VERIFICATION → VALIDATION → POSTPROCESSING → LIME");
             log.info("═══════════════════════════════════════════════════════════");
 
             return enhancedResult;
@@ -464,55 +529,90 @@ public class JobAnalysisService {
             String userId
     ) {
         try {
-            log.info("🔄 FILE ANALYSIS WITH UNIFIED PIPELINE");
-            log.info("   File Type: {}", fileType);
+            log.info("╔════════════════════════════════════════════════════════╗");
+            log.info("║ FILE ANALYSIS WITH UNIFIED PIPELINE                   ║");
+            log.info("╚════════════════════════════════════════════════════════╝");
             
             // ──────────────────────────────────────────────────────────
-            // STEP 1: Extract text from file
+            // STEP 1: Validate file and file type
             // ──────────────────────────────────────────────────────────
-            log.info("📄 STEP 1: Extracting text from file...");
+            log.info("📋 PRE-PROCESSING: Validating file and input type...");
+            
+            if (file == null) {
+                log.error("❌ File is null");
+                return new EnhancedJobResult("error", 0.0, 0.0);
+            }
+            
+            if (!file.exists()) {
+                log.error("❌ File does not exist: {}", file.getAbsolutePath());
+                return new EnhancedJobResult("error", 0.0, 0.0);
+            }
+            
+            // Normalize file type
+            String normalizedFileType = fileType != null ? fileType.toLowerCase().trim() : "text";
+            log.info("   File Type: {} (normalized)", normalizedFileType);
+            log.info("   File Size: {} bytes", file.length());
+            
+            if (file.length() == 0) {
+                log.error("❌ File is empty (0 bytes)");
+                return new EnhancedJobResult("error", 0.0, 0.0);
+            }
+
+            // ──────────────────────────────────────────────────────────
+            // STEP 2: Extract text from file (input normalization)
+            // ──────────────────────────────────────────────────────────
+            log.info("📄 STEP 1: Extracting text from {} file...", normalizedFileType);
             String extractedText = null;
 
-            if (fileType != null && fileType.equalsIgnoreCase("audio")) {
+            if (normalizedFileType.equalsIgnoreCase("audio")) {
                 log.info("   Using audio transcription service...");
                 extractedText = audioService.transcribeAudio(file);
-            } else if (fileType != null && fileType.equalsIgnoreCase("image")) {
+            } else if (normalizedFileType.equalsIgnoreCase("image")) {
                 log.info("   Using OCR service...");
                 extractedText = ocrService.extractTextFromImage(file);
-            } else if (fileType != null && fileType.equalsIgnoreCase("document")) {
+            } else if (normalizedFileType.equalsIgnoreCase("document")) {
                 log.info("   Using document text extraction service...");
                 extractedText = textExtractService.extractText(file);
             } else {
-                log.error("❌ Unsupported file type: {}", fileType);
-                EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
-                return errorResult;
+                log.error("❌ Unsupported file type: {}", normalizedFileType);
+                return new EnhancedJobResult("error", 0.0, 0.0);
             }
 
-            if (extractedText == null || extractedText.trim().length() < 20) {
-                log.error("❌ Unable to extract readable text from file");
-                EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
-                return errorResult;
+            // Validate extracted text
+            if (extractedText == null || extractedText.trim().isEmpty()) {
+                log.error("❌ Unable to extract readable text from {} file", normalizedFileType);
+                return new EnhancedJobResult("error", 0.0, 0.0);
             }
 
-            log.info("✅ Text extracted successfully ({} characters)", extractedText.length());
+            extractedText = extractedText.trim();
+            
+            if (extractedText.length() < 20) {
+                log.error("❌ Extracted text is too short ({} chars) - minimum 20 chars required", extractedText.length());
+                return new EnhancedJobResult("error", 0.0, 0.0);
+            }
+
+            log.info("✅ Text extraction successful ({} characters)", extractedText.length());
 
             // ──────────────────────────────────────────────────────────
-            // STEP 2: Call unified pipeline with extracted text
+            // STEP 3: Call unified pipeline with extracted text
             // ──────────────────────────────────────────────────────────
-            log.info("🔄 STEP 2: Running unified pipeline with extracted text...");
+            log.info("🔄 STEP 2: Running UNIFIED PIPELINE with extracted text from {} file...", 
+                normalizedFileType.toUpperCase());
+            
             EnhancedJobResult result = analyzeWithUnifiedPipeline(
                 extractedText,
                 userCompanyName,
                 userJobPostingUrl,
                 userContactEmail,
                 userId,
-                fileType.toUpperCase()
+                normalizedFileType.toUpperCase()
             );
 
+            log.info("✅ File analysis completed successfully");
             return result;
 
         } catch (Exception e) {
-            log.error("❌ FILE ANALYSIS WITH UNIFIED PIPELINE FAILED: {}", e.getMessage(), e);
+            log.error("❌ FILE ANALYSIS FAILED: {}", e.getMessage(), e);
             EnhancedJobResult errorResult = new EnhancedJobResult("error", 0.0, 0.0);
             return errorResult;
         }

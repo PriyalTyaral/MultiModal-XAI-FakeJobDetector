@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,14 +31,7 @@ public class JobAnalysisController {
     @Autowired private JobAnalysisService jobService;
     @Autowired private LimeService limeService;
     @Autowired private EntityExtractionService entityExtractionService;
-    @Autowired private com.example.random_major.repository.JobRecordRepository jobRecordRepository;
     @Autowired private com.example.random_major.service.JobResultService jobResultService;
-
-    @Value("${lime.num-features:10}")
-    private int defaultNumFeatures;
-
-    @Value("${lime.output-format:json}")
-    private String defaultOutputFormat;
 
     // ---------------------------------------------------------
     // ✅ TEXT ANALYSIS — with optional LIME depth / format params
@@ -109,7 +101,6 @@ public class JobAnalysisController {
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().body(
                 Map.of("error", "Analysis failed: " + e.getMessage())
             );
@@ -144,25 +135,19 @@ public class JobAnalysisController {
             file.transferTo(tempFile);
 
             // ───────────────────────────────────────────────────────────
-            // If verification parameters provided, use unified pipeline
-            // Otherwise, use basic file analysis for backward compatibility
+            // ✅ UNIFIED PIPELINE: ALWAYS use analyzeFileWithUnifiedPipeline
+            // This ensures consistent processing for ALL input types regardless
+            // of whether user provides company name or not
             // ───────────────────────────────────────────────────────────
-            if (companyName != null && !companyName.trim().isEmpty()) {
-                // Use unified pipeline with verification
-                EnhancedJobResult result = jobService.analyzeFileWithUnifiedPipeline(
-                    tempFile,
-                    fileType,
-                    companyName,
-                    jobPostingUrl,
-                    contactEmail,
-                    userId
-                );
-                return ResponseEntity.ok(result);
-            } else {
-                // Use basic file analysis for backward compatibility
-                EnhancedJobResult result = jobService.analyzeFromFile(tempFile, fileType, userId);
-                return ResponseEntity.ok(result);
-            }
+            EnhancedJobResult result = jobService.analyzeFileWithUnifiedPipeline(
+                tempFile,
+                fileType,
+                companyName,  // Can be null - will be auto-filled from extracted data
+                jobPostingUrl,
+                contactEmail,
+                userId
+            );
+            return ResponseEntity.ok(result);
 
         } finally {
             if (tempFile != null && tempFile.exists()) {
@@ -232,8 +217,11 @@ public class JobAnalysisController {
 
             return ResponseEntity.ok(result);
 
+        } catch (IOException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                Map.of("error", "File processing failed: " + e.getMessage())
+            );
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().body(
                 Map.of("error", "File analysis failed: " + e.getMessage())
             );
